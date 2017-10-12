@@ -21,6 +21,7 @@ package es.udc.gac.hdfs_sequence_parser.mapred;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
@@ -33,12 +34,11 @@ import org.apache.hadoop.io.compress.CompressionInputStream;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.SplitCompressionInputStream;
 import org.apache.hadoop.io.compress.SplittableCompressionCodec;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-import es.udc.gac.hdfs_sequence_parser.util.Constants;
 import es.udc.gac.hdfs_sequence_parser.util.LineReader;
 
 /**
@@ -47,7 +47,7 @@ import es.udc.gac.hdfs_sequence_parser.util.LineReader;
  * @author Roberto Rey Exposito		<rreye@udc.es>
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
  */
-public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWritable, Text>{
+public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWritable, Text> {
 
 	private FSDataInputStream fileInputStream;
 	private CompressionInputStream compressionFileInputStream;
@@ -63,23 +63,17 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 	public SingleEndSequenceRecordReader() {
 		key = new LongWritable();
-		value = new Text(new byte[Constants.bufferSize]);
+		value = new Text();
 		start = pos = end = 0;
 	}
-	
-	public SingleEndSequenceRecordReader(int bufferSize) {
-		key = new LongWritable();
-		value = new Text(new byte[bufferSize]);
-		start = pos = end = 0;
-	}
-	
+
 	public abstract boolean nextKeyValue() throws IOException;
 
 	@Override
 	public LongWritable getCurrentKey() {
 		return key;
 	}
-	
+
 	@Override
 	public Text getCurrentValue() {
 		return value;
@@ -94,11 +88,11 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			return Math.min(1.0f, (getSplitPosition() - start) / (float)(end - start));
 		}
 	}
-	
+
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
 
-		org.apache.hadoop.conf.Configuration conf = context.getConfiguration();
+		Configuration conf = context.getConfiguration();
 		FileSplit split = (FileSplit) genericSplit;
 		Path file = split.getPath();
 		start = split.getStart();
@@ -174,7 +168,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 		System.out.println("SequenceRecordReader initialized: start "+start+", end "+end+", splitPos "+getSplitPosition());
 	}
-	
+
 	@Override
 	public synchronized void close() throws IOException {
 		try {
@@ -188,22 +182,21 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			}
 		}
 	}
-	
-	
-	protected long getSplitPosition() throws IOException {
-		if (!isCompressedInput) {
-			return pos;
-		} else {
-			return filePos.getPos();
-		}
-	}
-	
+
 	protected int readLine(Text str) throws IOException {
 		int bytesRead = lineReader.readLine(str);
 		pos += bytesRead;
 		return bytesRead;
 	}
-	
+
+	protected void seek(long pos) throws IOException {
+		lineReader.seek(pos);
+	}
+
+	protected long getLineReaderPosition() throws IOException {
+		return lineReader.getPos();
+	}
+
 	protected boolean isSplitFinished() throws IOException {
 		/*
 		 *  We always read one extra record, which lies outside the 
@@ -214,12 +207,12 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 		return false;
 	}
-	
-	protected long getLineReaderPosition() throws IOException {
-		return lineReader.getPos();
-	}
-	
-	protected void seek(long pos) throws IOException {
-		lineReader.seek(pos);
+
+	protected long getSplitPosition() throws IOException {
+		if (!isCompressedInput) {
+			return pos;
+		} else {
+			return filePos.getPos();
+		}
 	}
 }
