@@ -1,23 +1,22 @@
 /*
  * Copyright (C) 2017 Universidade da Coruña
  * 
- * This file is part of ___.
+ * This file is part of HSP.
  * 
- * ___ is free software: you can redistribute it and/or modify
+ * HSP is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * ___ is distributed in the hope that it will be useful,
+ * HSP is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with ___. If not, see <http://www.gnu.org/licenses/>.
+ * along with HSP. If not, see <http://www.gnu.org/licenses/>.
  */
-
-package es.udc.gac.hdfs_sequence_parser.mapred;
+package es.udc.gac.hadoop.sequence.parser.mapreduce;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 	public static final String RIGHT_INPUT_PATH = "hsra.paired.right.path";
 	public static final String LEFT_INPUT_FORMAT = "hsra.paired.left.inputformat";
 	public static final String RIGHT_INPUT_FORMAT = "hsra.paired.right.inputformat";
-	
+
 	/**
 	 * 
 	 * @param The job submitter's view
@@ -65,7 +64,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 		conf.set(LEFT_INPUT_FORMAT, inputFormatClass.getCanonicalName());
 		conf.set(LEFT_INPUT_PATH, StringUtils.escapeString(path.toString()));
 	}
-	
+
 	/**
 	 * 
 	 * @param The job submitter's view
@@ -80,7 +79,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 		conf.set(RIGHT_INPUT_FORMAT, inputFormatClass.getCanonicalName());
 		conf.set(RIGHT_INPUT_PATH, StringUtils.escapeString(path.toString()));
 	}
-	
+
 	/**
 	 * 
 	 * @param The job's context
@@ -94,7 +93,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 		paths[1] = new Path(StringUtils.unEscapeString(rightInputPath));
 		return paths;
 	}
-	
+
 	/**
 	 * 
 	 * @param The job's context
@@ -108,7 +107,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 		inputFormats[1] = rightInputFormat;
 		return inputFormats;
 	}
-	
+
 	@Override
 	public RecordReader<LongWritable, Text> createRecordReader(InputSplit split, TaskAttemptContext context)
 			throws IOException, InterruptedException {
@@ -176,7 +175,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 
 		return splits;
 	}
-	
+
 	/**
 	 * Get the a list of InputSplits for any inputPath.
 	 * 
@@ -202,7 +201,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 		List<InputSplit> splits = inputFormat.getSplits(job);
 		return splits;
 	}
-	
+
 	/**
 	 * Check if the input has any problem.
 	 * 

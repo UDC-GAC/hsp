@@ -1,29 +1,29 @@
 /*
  * Copyright (C) 2017 Universidade da Coruña
  * 
- * This file is part of ___.
+ * This file is part of HSP.
  * 
- * ___ is free software: you can redistribute it and/or modify
+ * HSP is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * ___ is distributed in the hope that it will be useful,
+ * HSP is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with HSRA. If not, see <http://www.gnu.org/licenses/>.
+ * along with HSP. If not, see <http://www.gnu.org/licenses/>.
  */
-
-package es.udc.gac.hdfs_sequence_parser.mapred;
+package es.udc.gac.hadoop.sequence.parser.mapreduce;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
-import es.udc.gac.hdfs_sequence_parser.util.LineReader;
+import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
 /**
  * @author Roberto Rey Exposito		<rreye@udc.es>
@@ -33,18 +33,18 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 
 	private static final int NUMBER_OF_LINES_PER_READ = 4;
 	private static final Text FASTQ_COMMENT_LINE = new Text("+" + LineReader.LF);
-	
+
 	private Text newLine;
 	private Text temp;
 	private long numReads;
 
-	public FastQRecordReader() {
-		super();
+	public FastQRecordReader(TaskAttemptContext context) {
+		super(context);
 		newLine = new Text();
 		temp = new Text();
 		numReads = start;
 	}
-	
+
 	@Override
 	public boolean nextKeyValue() throws IOException {
 		int i = 0;

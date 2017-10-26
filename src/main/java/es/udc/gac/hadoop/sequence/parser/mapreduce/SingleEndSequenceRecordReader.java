@@ -1,27 +1,25 @@
 /*
  * Copyright (C) 2017 Universidade da Coruña
  * 
- * This file is part of ___.
+ * This file is part of HSP.
  * 
- * ___ is free software: you can redistribute it and/or modify
+ * HSP is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * ___ is distributed in the hope that it will be useful,
+ * HSP is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with ____. If not, see <http://www.gnu.org/licenses/>.
+ * along with HSP. If not, see <http://www.gnu.org/licenses/>.
  */
-
-package es.udc.gac.hdfs_sequence_parser.mapred;
+package es.udc.gac.hadoop.sequence.parser.mapreduce;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.Seekable;
@@ -39,10 +37,11 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-import es.udc.gac.hdfs_sequence_parser.util.LineReader;
+import es.udc.gac.hadoop.sequence.parser.util.Configuration;
+import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
 /**
- * RecordReader which breaks the data of any sequence file in pair key/value (LongWritable/Text)
+ * RecordReader which breaks the data of single-end sequence files in key/value pairs (LongWritable/Text)
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
@@ -55,15 +54,17 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 	private boolean isCompressedInput;
 	private Decompressor decompressor;
 	private LineReader lineReader;
+	private int bufferSize;
 	protected LongWritable key;
 	protected Text value;
 	protected long start;
 	protected long end;
 	protected long pos;
 
-	public SingleEndSequenceRecordReader() {
+	public SingleEndSequenceRecordReader(TaskAttemptContext context) {
+		bufferSize = Configuration.getInputBufferSize(context.getConfiguration());
 		key = new LongWritable();
-		value = new Text();
+		value = new Text(new byte[bufferSize]);
 		start = pos = end = 0;
 	}
 
@@ -92,11 +93,13 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
 
-		Configuration conf = context.getConfiguration();
+		org.apache.hadoop.conf.Configuration conf = context.getConfiguration();
 		FileSplit split = (FileSplit) genericSplit;
 		Path file = split.getPath();
 		start = split.getStart();
 		end = start + split.getLength();
+
+		System.out.println("SequenceRecordReader: Input buffer size "+bufferSize);
 
 		// open the file
 		System.out.println("SequenceRecordReader: Open input split "+split.toString());
@@ -117,7 +120,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 						.createInputStream(fileInputStream, decompressor, start, end, SplittableCompressionCodec.READ_MODE.BYBLOCK);
 
 				// Create line reader and adjust positions
-				lineReader = new LineReader(compressionFileInputStream, conf);
+				lineReader = new LineReader(compressionFileInputStream, bufferSize);
 				start = ((SplitCompressionInputStream) compressionFileInputStream).getAdjustedStart();
 				end = ((SplitCompressionInputStream) compressionFileInputStream).getAdjustedEnd();
 				filePos = compressionFileInputStream;
@@ -137,7 +140,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 				compressionFileInputStream = codec.createInputStream(fileInputStream, decompressor);
 
 				// Create line reader and adjust positions
-				lineReader = new LineReader(compressionFileInputStream, conf);
+				lineReader = new LineReader(compressionFileInputStream, bufferSize);
 				filePos = fileInputStream;
 			}
 
@@ -149,12 +152,12 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			fileInputStream.seek(start);
 
 			// Create line reader and adjust positions
-			lineReader = new LineReader(fileInputStream, conf);
+			lineReader = new LineReader(fileInputStream, bufferSize);
 			filePos = fileInputStream;
 		}
 
 		/**
-		 * If this is not the first split, we throw away the first line
+		 * If this split is not the first one, we throw away the first line
 		 * because we always (except the last split) read one extra record
 		 * in nextKeyValue() method (see also isSplitFinished() method)
 		 */

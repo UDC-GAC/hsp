@@ -1,29 +1,27 @@
 /*
  * Copyright (C) 2017 Universidade da Coruña
  * 
- * This file is part of ___.
+ * This file is part of HSP.
  * 
- * ___ is free software: you can redistribute it and/or modify
+ * HSP is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * ___ is distributed in the hope that it will be useful,
+ * HSP is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
- * along with ____. If not, see <http://www.gnu.org/licenses/>.
+ * along with HSP. If not, see <http://www.gnu.org/licenses/>.
  */
-
-package es.udc.gac.hdfs_sequence_parser.util;
+package es.udc.gac.hadoop.sequence.parser.util;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 
 /**
@@ -40,34 +38,24 @@ public class LineReader implements Closeable {
 	 */
 	public static final Text LF = new Text("\n");
 	private static final byte LF_BYTE = '\n';
-	
-	private int bufferSize;
+
 	private InputStream inputStream;
 	private byte[] buffer;
 	private int bufferLength; // the number of bytes of real data in the buffer
 	private int bufferPos; 	// the current position in the buffer
-	
-	public LineReader(InputStream inputStream, Configuration conf) {
+
+	public LineReader(InputStream inputStream, int bufferSize) {
 		this.inputStream = inputStream;
-		this.bufferSize = Constants.bufferSize;
-		this.buffer = new byte[this.bufferSize];
+		this.buffer = new byte[bufferSize];
 		this.bufferPos = 0;
 		this.bufferLength = 0;
 	}
-	
-	public LineReader(InputStream inputStream, Configuration conf, int bufferSize) {
-		this.inputStream = inputStream;
-		this.bufferSize = bufferSize;
-		this.buffer = new byte[this.bufferSize];
-		this.bufferPos = 0;
-		this.bufferLength = 0;
-	}
-	
+
 	@Override
 	public void close() throws IOException {
 		inputStream.close();
 	}
-	
+
 	/**
 	 * Seek to the given offset.
 	 *
@@ -76,19 +64,19 @@ public class LineReader implements Closeable {
 	 * @throws IOException
 	 */
 	public void seek(long pos) throws IOException {
-		if (pos < 0 || pos >= bufferSize)
+		if (pos < 0 || pos >= buffer.length)
 			throw new IOException("Incorrect position: "+pos);
 
 		this.bufferPos = (int) pos;
 	}
-	
+
 	/**
 	 * Return the current offset from the start of the buffer.
 	 */
 	public long getPos() {
 		return bufferPos;
 	}
-	
+
 	/**
 	 * Read a line from the InputStream terminated by LF into the given Text.
 	 *
@@ -138,7 +126,7 @@ public class LineReader implements Closeable {
 
 		return (int) bytesConsumed;
 	}
-	
+
 	/**
 	 * Finds the first occurence of <code>what</code> in the backing
 	 * buffer of <code>text</code>, starting as position 
