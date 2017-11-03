@@ -30,13 +30,12 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 /**
- * SequenceTextInputFormat is the base for all file based on sequence
- * information.
+ * Text-based InputFormat for single-end sequence files.
  * 
  * @author Roberto Rey Exposito <rreye@udc.es>
  * @author Luis Lorenzo Mosquera <luis.lorenzom@udc.es>
  */
-public abstract class SequenceTextInputFormat extends FileInputFormat<LongWritable, Text> {
+public abstract class SingleEndSequenceInputFormat extends FileInputFormat<LongWritable, Text> {
 
 	protected static final double SPLIT_SLOP = 1.1; // 10% slop
 

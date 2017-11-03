@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
 /**
+ * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
  */

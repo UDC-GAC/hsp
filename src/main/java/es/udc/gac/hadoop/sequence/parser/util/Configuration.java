@@ -18,6 +18,11 @@
  */
 package es.udc.gac.hadoop.sequence.parser.util;
 
+/**
+ * 
+ * @author Roberto Rey Exposito		<rreye@udc.es>
+ * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
+ */
 public final class Configuration {
 
 	private static final String INPUT_BUFFER_SIZE = "hdfs.sequence.parser.buffer.size";

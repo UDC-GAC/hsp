@@ -38,12 +38,12 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 
 /**
- * InputFormat for Pair-end sequence files.
+ * Text-based InputFormat for paired-end sequence files.
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
  */
-public class PairedSequenceInputFormat extends SequenceTextInputFormat {
+public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 
 	public static final String LEFT_INPUT_PATH = "hsra.paired.left.path";
 	public static final String RIGHT_INPUT_PATH = "hsra.paired.right.path";
@@ -57,7 +57,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 	 * @param The inputFormat class required by inputPath
 	 * @throws IOException if there is any problem in the I/O file's operations
 	 */
-	public static void setLeftInputPath(Job job, Path inputPath, Class<? extends SequenceTextInputFormat> inputFormatClass) throws IOException {
+	public static void setLeftInputPath(Job job, Path inputPath, Class<? extends SingleEndSequenceInputFormat> inputFormatClass) throws IOException {
 		Configuration conf = job.getConfiguration();
 		checkInputPath(job, inputPath);
 		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);
@@ -72,7 +72,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 	 * @param The inputFormat class required by inputPath
 	 * @throws IOException if there is any problem in the I/O file's operations
 	 */
-	public static void setRightInputPath(Job job, Path inputPath, Class<? extends SequenceTextInputFormat> inputFormatClass) throws IOException {
+	public static void setRightInputPath(Job job, Path inputPath, Class<? extends SingleEndSequenceInputFormat> inputFormatClass) throws IOException {
 		Configuration conf = job.getConfiguration();
 		checkInputPath(job, inputPath);
 		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);
@@ -190,7 +190,7 @@ public class PairedSequenceInputFormat extends SequenceTextInputFormat {
 		Configuration conf = job.getConfiguration();
 
 		// Create a new instance of the input format
-		SequenceTextInputFormat inputFormat = (SequenceTextInputFormat) ReflectionUtils.newInstance(Class.forName(inputFormatClass), conf);
+		SingleEndSequenceInputFormat inputFormat = (SingleEndSequenceInputFormat) ReflectionUtils.newInstance(Class.forName(inputFormatClass), conf);
 
 		// Add input path
 		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);

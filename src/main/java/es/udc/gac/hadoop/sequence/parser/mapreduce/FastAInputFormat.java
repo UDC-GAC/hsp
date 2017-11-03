@@ -30,7 +30,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * @author Roberto Rey Exposito		<rreye@udc.es>
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
  */
-public class FastAInputFormat extends SequenceTextInputFormat {
+public class FastAInputFormat extends SingleEndSequenceInputFormat {
 
 	@Override
 	public RecordReader<LongWritable, Text> createRecordReader(InputSplit inputSplit, TaskAttemptContext context) {

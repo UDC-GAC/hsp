@@ -30,7 +30,6 @@ import org.apache.hadoop.mapreduce.lib.join.CompositeInputSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
- * 
  * RecordReader which breaks the data of paired-end sequence files in key/value pairs (LongWritable/Text)
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
@@ -52,14 +51,14 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 
 		// Create left and right record readers
 		try {
-			String leftInputFormatClass = context.getConfiguration().get(PairedSequenceInputFormat.LEFT_INPUT_FORMAT, "");
-			String rightInputFormatClass = context.getConfiguration().get(PairedSequenceInputFormat.RIGHT_INPUT_FORMAT, "");
+			String leftInputFormatClass = context.getConfiguration().get(PairedEndSequenceInputFormat.LEFT_INPUT_FORMAT, "");
+			String rightInputFormatClass = context.getConfiguration().get(PairedEndSequenceInputFormat.RIGHT_INPUT_FORMAT, "");
 
 			if (!leftInputFormatClass.equals(rightInputFormatClass))
 				throw new IOException("Input formats do not match: "+leftInputFormatClass+", "+rightInputFormatClass);
 
-			SequenceTextInputFormat leftInputFormat = (SequenceTextInputFormat) ReflectionUtils.newInstance(Class.forName(leftInputFormatClass), conf);
-			SequenceTextInputFormat rightInputFormat = (SequenceTextInputFormat) ReflectionUtils.newInstance(Class.forName(rightInputFormatClass), conf);
+			SingleEndSequenceInputFormat leftInputFormat = (SingleEndSequenceInputFormat) ReflectionUtils.newInstance(Class.forName(leftInputFormatClass), conf);
+			SingleEndSequenceInputFormat rightInputFormat = (SingleEndSequenceInputFormat) ReflectionUtils.newInstance(Class.forName(rightInputFormatClass), conf);
 			leftRR = (SingleEndSequenceRecordReader) leftInputFormat.createRecordReader(inputSplit.get(0), context);
 			rightRR = (SingleEndSequenceRecordReader) rightInputFormat.createRecordReader(inputSplit.get(1), context);
 		} catch (ClassNotFoundException e) {
