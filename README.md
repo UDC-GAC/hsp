@@ -14,7 +14,7 @@ Quick User's Guide
 
 - Prerequisites:
 
-1) Make sure you have Java Develpment Environment (JDK) version 1.7 or above
+1) Make sure you have Java Develpment Environment (JDK) version 1.6 or above
 
 2) Make sure you have a working Apache Maven distribution version 3 or above:
 
@@ -23,7 +23,7 @@ Quick User's Guide
 
 - Installation:
 
-1) In order to compile, build and install the JAR distribution in your Maven
+In order to compile, build and install the JAR distribution in your Maven
 local repository, just execute the following Maven command from within the HSP
 root directory:
 
@@ -32,7 +32,7 @@ root directory:
 
 - Usage:
 
-1) In order to use HSP in your projects, add the following Maven dependency
+In order to use HSP in your projects, add the following Maven dependency
 in your pom file:
 
   <dependency>
