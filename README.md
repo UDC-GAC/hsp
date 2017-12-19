@@ -15,14 +15,14 @@ HSP supports the processing of input datasets compressed with Gzip (i.e., .gz ex
 
 ### Installation
 
-In order to compile, build and install the JAR distribution in your Maven local repository, just execute the following Maven command from within the **HSP** root directory:
+In order to compile, build and install the JAR distribution in your Maven local repository, just execute the following Maven command from within the HSP root directory:
 
 ```
 $ mvn install
 ```
 ### Usage
 
-In order to use **HSP** in your projects, add the following Maven dependency in your pom file:
+In order to use the HSP library in your projects, add the following Maven dependency in your pom file:
 
 ```xml
 <dependency>
@@ -40,5 +40,4 @@ In order to use **HSP** in your projects, add the following Maven dependency in 
 
 ## License
 
-This tool is distributed as free software and is publicly available under 
-the GPLv3 license (see the [LICENSE](LICENSE) file for details)
+This library is distributed as free software and is publicly available under the GPLv3 license (see the [LICENSE](LICENSE) file for more details)
