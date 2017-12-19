@@ -15,10 +15,12 @@ HSP supports the processing of input datasets compressed with Gzip (i.e., .gz ex
 
 ### Installation
 
-In order to compile, build and install the JAR distribution in your Maven local repository, just execute the following Maven command from within the HSP root directory:
+In order to download, compile, build and install the HSP library in your Maven local repository (by default ~/.m2), just execute the following commands:
 
 ```
-$ mvn install
+git clone https://github.com/rreye/hsp.git
+cd hsp
+mvn install
 ```
 ### Usage
 
