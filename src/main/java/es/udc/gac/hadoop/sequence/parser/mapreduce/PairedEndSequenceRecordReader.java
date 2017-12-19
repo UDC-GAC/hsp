@@ -33,7 +33,8 @@ import org.apache.hadoop.util.ReflectionUtils;
  * RecordReader which breaks the data of paired-end sequence files in key/value pairs (LongWritable/Text)
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
- * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
+ * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>
+ * @author Jorge González-Domínguez	<jgonzalezd@udc.es>
  */
 public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Text> {
 

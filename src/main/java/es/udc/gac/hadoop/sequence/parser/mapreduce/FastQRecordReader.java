@@ -28,7 +28,8 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 /**
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
- * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
+ * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>
+ * @author Jorge González-Domínguez	<jgonzalezd@udc.es>
  */
 public class FastQRecordReader extends SingleEndSequenceRecordReader {
 

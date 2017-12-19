@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  * 
  * @author Roberto Rey Exposito <rreye@udc.es>
  * @author Luis Lorenzo Mosquera <luis.lorenzom@udc.es>
+ * @author Jorge González-Domínguez	<jgonzalezd@udc.es>
  */
 public abstract class SingleEndSequenceInputFormat extends FileInputFormat<LongWritable, Text> {
 

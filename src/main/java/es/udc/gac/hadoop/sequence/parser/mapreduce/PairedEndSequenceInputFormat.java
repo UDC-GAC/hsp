@@ -41,7 +41,8 @@ import org.apache.hadoop.util.StringUtils;
  * Text-based InputFormat for paired-end sequence files.
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
- * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
+ * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>
+ * @author Jorge González-Domínguez	<jgonzalezd@udc.es> 
  */
 public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 

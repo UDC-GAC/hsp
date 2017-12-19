@@ -28,7 +28,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
  * InputFormat implementation for FASTQ sequence files.
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
- * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es> 
+ * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>
+ * @author Jorge González-Domínguez	<jgonzalezd@udc.es>
  */
 public class FastQInputFormat extends SingleEndSequenceInputFormat {
 
