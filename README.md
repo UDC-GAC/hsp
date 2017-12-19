@@ -32,8 +32,9 @@ In order to use **HSP** in your projects, add the following Maven dependency in 
 
 ## Authors
 
-* **Roberto R. Expósito** (https://github.com/rreye)
+* **Roberto R. Expósito** (http://gac.udc.es/~rreye)
 * **Luis Lorenzo Mosquera** (https://github.com/luislorenzom)
+* **Jorge González-Domínguez** (http://gac.udc.es/~jgonzalezd)
 
 ## License
 
