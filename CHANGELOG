@@ -1,0 +1,12 @@
+HSP Changelog
+-------------
+This file briefly describes the main changes for each version of the HSP library.
+
+
+HSP v1.0 - 2017/12/19
+---------------------
+The first public release of HSP.
+
+	- Support for FASTQ/FASTA datasets in single-end and paired-end modes
+
+	- Support for Gzip and BZip2 compression codecs
