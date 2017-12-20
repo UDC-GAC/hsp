@@ -19,6 +19,7 @@
 package es.udc.gac.hadoop.sequence.parser.mapreduce;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
@@ -37,9 +38,6 @@ import org.apache.hadoop.util.ReflectionUtils;
  * @author Jorge González-Domínguez	<jgonzalezd@udc.es>
  */
 public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Text> {
-
-	private static final Text PAIRED_END_MARKER_TEXT = new Text("|");
-	public static final String PAIRED_END_MARKER = PAIRED_END_MARKER_TEXT.toString();
 
 	// Sequence record readers to get key-value pairs from single-end datasets
 	private SingleEndSequenceRecordReader leftRR;
@@ -123,5 +121,14 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 			throw new IOException("Unexpected end of split for left record reader");
 
 		return false;
+	}
+
+	public static String getLeftRead(LongWritable key, Text pairedRead) throws CharacterCodingException {
+		return Text.decode(pairedRead.getBytes(), 0, (int) key.get(), false);
+	}
+
+	public static String getRightRead(LongWritable key, Text pairedRead) throws CharacterCodingException {
+		int length = (int) key.get();
+		return Text.decode(pairedRead.getBytes(), length, length, false);
 	}
 }

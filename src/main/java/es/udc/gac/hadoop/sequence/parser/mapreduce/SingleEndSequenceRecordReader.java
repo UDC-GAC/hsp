@@ -19,6 +19,7 @@
 package es.udc.gac.hadoop.sequence.parser.mapreduce;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.Path;
@@ -218,5 +219,9 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		} else {
 			return filePos.getPos();
 		}
+	}
+
+	public static String getRead(Text singleRead) throws CharacterCodingException {
+		return Text.decode(singleRead.getBytes(), 0, singleRead.getLength(), false);
 	}
 }
