@@ -24,14 +24,18 @@ mvn install
 ```
 ### Usage
 
-In order to use the HSP library in your projects, add the following Maven dependency in your pom file:
+In order to use the HSP library in your projects, add the following dependency section to your pom.xml:
 
 ```xml
-<dependency>
-  <groupId>es.udc.gac</groupId>
-  <artifactId>hadoop-sequence-parser</artifactId>
-  <version>1.0</version>
-</dependency>
+<dependencies>
+...
+  <dependency>
+   <groupId>es.udc.gac</groupId>
+   <artifactId>hadoop-sequence-parser</artifactId>
+   <version>1.0</version> <!-- or latest version -->
+  </dependency>
+...
+</dependencies>
 ```
 
 ## Authors
