@@ -39,7 +39,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 	public FastARecordReader(TaskAttemptContext context) {
 		super(context);
 		newLine = new Text();
-		this.numReads = start;
+		numReads = 0;
 	}
 
 	@Override

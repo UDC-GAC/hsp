@@ -44,7 +44,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		super(context);
 		newLine = new Text();
 		temp = new Text();
-		numReads = start;
+		numReads = 0;
 	}
 
 	@Override
