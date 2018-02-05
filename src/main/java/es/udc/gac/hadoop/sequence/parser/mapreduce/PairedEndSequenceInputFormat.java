@@ -33,7 +33,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.join.CompositeInputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 
@@ -113,7 +113,7 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 	public RecordReader<LongWritable, Text> createRecordReader(InputSplit split, TaskAttemptContext context)
 			throws IOException, InterruptedException {
 
-		return new PairedEndSequenceRecordReader((CompositeInputSplit) split, context);
+		return new PairedEndSequenceRecordReader((PairedEndCompositeInputSplit) split, context);
 	}
 
 	@Override
@@ -165,9 +165,9 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 
 		try {
 			for(int i = 0; i<leftSplits.size(); i++) {
-				CompositeInputSplit compositeSplit = new CompositeInputSplit(2);
-				compositeSplit.add(leftSplits.get(i));
-				compositeSplit.add(rightSplits.get(i));
+				PairedEndCompositeInputSplit compositeSplit = new PairedEndCompositeInputSplit();
+				compositeSplit.add((FileSplit)leftSplits.get(i));
+				compositeSplit.add((FileSplit)rightSplits.get(i));
 				splits.add(compositeSplit);
 			}
 		} catch (InterruptedException e) {

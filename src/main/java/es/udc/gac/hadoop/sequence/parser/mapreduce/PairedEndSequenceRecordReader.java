@@ -27,7 +27,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.join.CompositeInputSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 
 /**
@@ -45,7 +44,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 	private LongWritable key;
 	private Text value;
 
-	public PairedEndSequenceRecordReader(CompositeInputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
+	public PairedEndSequenceRecordReader(PairedEndCompositeInputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
 
 		// Create left and right record readers
@@ -85,7 +84,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
-		CompositeInputSplit inputSplit = (CompositeInputSplit) genericSplit;
+		PairedEndCompositeInputSplit inputSplit = (PairedEndCompositeInputSplit) genericSplit;
 		leftRR.initialize(inputSplit.get(0), context);
 		rightRR.initialize(inputSplit.get(1), context);
 		System.out.println("PairedEndSequenceRecordReader initialized");
