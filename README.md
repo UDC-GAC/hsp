@@ -22,6 +22,7 @@ git clone https://github.com/rreye/hsp.git
 cd hsp
 mvn install
 ```
+
 ### Usage
 
 In order to use the HSP library in your projects, add the following dependency section to your pom.xml:
@@ -37,6 +38,10 @@ In order to use the HSP library in your projects, add the following dependency s
 ...
 </dependencies>
 ```
+## Projects using HSP
+
+* [MarDRe: MapReduce-based parallel tool to remove duplicate DNA reads](http://mardre.des.udc.es)
+* [HSRA: Hadoop Spliced Read Aligner for RNA sequencing data](http://hsra.dec.udc.es)
 
 ## Authors
 
