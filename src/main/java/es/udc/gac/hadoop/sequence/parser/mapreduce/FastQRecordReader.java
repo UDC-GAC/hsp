@@ -54,7 +54,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		//System.out.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
 
 		if (isSplitFinished())
 			return false;
@@ -67,7 +67,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 				return false;
 
 			if (found && i == NUMBER_OF_LINES_PER_READ) {
-				//System.out.println("nextKeyValue: last line and starting '@' has been previously found");
+				//System.err.println("nextKeyValue: last line and starting '@' has been previously found");
 				numReads++;
 				key.set(start+numReads);
 				value.append(newLine.getBytes(), 0, newLine.getLength());
@@ -75,7 +75,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (newLine.charAt(0) == '@') {
-				//System.out.println("nextKeyValue: starting '@' has been found at line "+i);
+				//System.err.println("nextKeyValue: starting '@' has been found at line "+i);
 				found = true;
 
 				secondRead = readLine(temp);
@@ -106,12 +106,12 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (i == NUMBER_OF_LINES_PER_READ) {
-				//System.out.println("nextKeyValue: last line and no starting '@' has been found (discard previous data)");
+				//System.err.println("nextKeyValue: last line and no starting '@' has been found (discard previous data)");
 				i = 0;
 			}
 		}
 
-		//System.out.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
 
 		return true;
 	}

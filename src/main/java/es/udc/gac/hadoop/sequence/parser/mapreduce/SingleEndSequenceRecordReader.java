@@ -101,10 +101,10 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		start = split.getStart();
 		end = start + split.getLength();
 
-		System.out.println("SequenceRecordReader: Input buffer size "+bufferSize);
+		System.err.println("SequenceRecordReader: Input buffer size "+bufferSize);
 
 		// open the file
-		System.out.println("SequenceRecordReader: Open input split "+split.toString());
+		System.err.println("SequenceRecordReader: Open input split "+split.toString());
 		fileInputStream = file.getFileSystem(conf).open(file);
 
 		// Check if input file is compressed
@@ -115,7 +115,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			decompressor = CodecPool.getDecompressor(codec);
 
 			if (codec instanceof SplittableCompressionCodec) {
-				System.out.println("SequenceRecordReader: Input split is compressed using a splittable codec ("+codec.getClass().getSimpleName()+")");
+				System.err.println("SequenceRecordReader: Input split is compressed using a splittable codec ("+codec.getClass().getSimpleName()+")");
 
 				// Get split compression input stream
 				compressionFileInputStream = ((SplittableCompressionCodec) codec)
@@ -127,7 +127,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 				end = ((SplitCompressionInputStream) compressionFileInputStream).getAdjustedEnd();
 				filePos = compressionFileInputStream;
 			} else {
-				System.out.println("SequenceRecordReader: Input split is compressed using a non-splittable codec ("+codec.getClass().getSimpleName()+")");
+				System.err.println("SequenceRecordReader: Input split is compressed using a non-splittable codec ("+codec.getClass().getSimpleName()+")");
 
 				if (start != 0) {
 					/*
@@ -147,7 +147,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			}
 
 		} else {
-			System.out.println("SequenceRecordReader: Input split is not compressed");
+			System.err.println("SequenceRecordReader: Input split is not compressed");
 			isCompressedInput = false;
 
 			// Seek to the start of the split
@@ -165,13 +165,13 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		 */
 		if (start != 0) {
 			start += readLine(value);
-			System.out.println("SequenceRecordReader: skipped '"+value+"'");
+			System.err.println("SequenceRecordReader: skipped '"+value+"'");
 			value.clear();
 		}
 
 		pos = start;
 
-		System.out.println("SequenceRecordReader initialized: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		System.err.println("SequenceRecordReader initialized: start "+start+", end "+end+", splitPos "+getSplitPosition());
 	}
 
 	@Override

@@ -87,7 +87,6 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 		PairedEndCompositeInputSplit inputSplit = (PairedEndCompositeInputSplit) genericSplit;
 		leftRR.initialize(inputSplit.get(0), context);
 		rightRR.initialize(inputSplit.get(1), context);
-		System.out.println("PairedEndSequenceRecordReader initialized");
 	}
 
 	@Override

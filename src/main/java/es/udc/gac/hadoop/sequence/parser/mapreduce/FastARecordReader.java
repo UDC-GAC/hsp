@@ -48,7 +48,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		//System.out.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
 
 		if (isSplitFinished())
 			return false;
@@ -56,7 +56,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		while (true) {
 			read = readLine(newLine);
 
-			//System.out.println("nextKeyValue: read "+read+", start "+start+", end "+end+", splitPos "+getSplitPosition());
+			//System.err.println("nextKeyValue: read "+read+", start "+start+", end "+end+", splitPos "+getSplitPosition());
 
 			if (read == 0) {
 				// EOF
@@ -66,7 +66,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (newLine.charAt(0) == '>') {
-				//System.out.println("nextKeyValue: starting '>' has been found");
+				//System.err.println("nextKeyValue: starting '>' has been found");
 
 				if (found) {
 					seek(getLineReaderPosition() - read);
@@ -85,7 +85,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				value.append(newLine.getBytes(), 0, newLine.getLength());
 		}
 
-		//System.out.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
 
 		return true;
 	}
