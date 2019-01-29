@@ -60,7 +60,21 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 	 */
 	public static void setLeftInputPath(Job job, Path inputPath, Class<? extends SingleEndSequenceInputFormat> inputFormatClass) throws IOException {
 		Configuration conf = job.getConfiguration();
-		checkInputPath(job, inputPath);
+		checkInputPath(conf, inputPath);
+		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);
+		conf.set(LEFT_INPUT_FORMAT, inputFormatClass.getCanonicalName());
+		conf.set(LEFT_INPUT_PATH, StringUtils.escapeString(path.toString()));
+	}
+
+	/**
+	 * 
+	 * @param The job configuration
+	 * @param The input Path
+	 * @param The inputFormat class required by inputPath
+	 * @throws IOException if there is any problem in the I/O file's operations
+	 */
+	public static void setLeftInputPath(Configuration conf, Path inputPath, Class<? extends SingleEndSequenceInputFormat> inputFormatClass) throws IOException {
+		checkInputPath(conf, inputPath);
 		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);
 		conf.set(LEFT_INPUT_FORMAT, inputFormatClass.getCanonicalName());
 		conf.set(LEFT_INPUT_PATH, StringUtils.escapeString(path.toString()));
@@ -75,7 +89,21 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 	 */
 	public static void setRightInputPath(Job job, Path inputPath, Class<? extends SingleEndSequenceInputFormat> inputFormatClass) throws IOException {
 		Configuration conf = job.getConfiguration();
-		checkInputPath(job, inputPath);
+		checkInputPath(conf, inputPath);
+		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);
+		conf.set(RIGHT_INPUT_FORMAT, inputFormatClass.getCanonicalName());
+		conf.set(RIGHT_INPUT_PATH, StringUtils.escapeString(path.toString()));
+	}
+
+	/**
+	 * 
+	 * @param The job configuration
+	 * @param The input Path
+	 * @param The inputFormat class required by inputPath
+	 * @throws IOException if there is any problem in the I/O file's operations
+	 */
+	public static void setRightInputPath(Configuration conf, Path inputPath, Class<? extends SingleEndSequenceInputFormat> inputFormatClass) throws IOException {
+		checkInputPath(conf, inputPath);
 		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);
 		conf.set(RIGHT_INPUT_FORMAT, inputFormatClass.getCanonicalName());
 		conf.set(RIGHT_INPUT_PATH, StringUtils.escapeString(path.toString()));
@@ -206,12 +234,12 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 	/**
 	 * Check if the input has any problem.
 	 * 
-	 * @param The job submitter's view
+	 * @param The job configuration
 	 * @param The input Path
 	 * @throws IOException for any problem found
 	 */
-	private static void checkInputPath(Job job, Path inputPath) throws IOException {
-		FileSystem fs = FileSystem.get(job.getConfiguration());
+	private static void checkInputPath(Configuration conf, Path inputPath) throws IOException {
+		FileSystem fs = FileSystem.get(conf);
 		FileStatus[] contents = fs.listStatus(inputPath);
 
 		if (contents == null) {
