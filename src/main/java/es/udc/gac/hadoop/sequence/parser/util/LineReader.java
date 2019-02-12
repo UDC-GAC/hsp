@@ -25,7 +25,7 @@ import java.io.InputStream;
 import org.apache.hadoop.io.Text;
 
 /**
- * This class is adapted from the Hadoop's LineReader implementation
+ * This class has been adapted from the Hadoop's LineReader implementation
  * 
  * @author Roberto Rey Exposito		<rreye@udc.es>
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>

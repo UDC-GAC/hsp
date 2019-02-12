@@ -37,6 +37,8 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import es.udc.gac.hadoop.sequence.parser.util.Configuration;
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
@@ -50,6 +52,7 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
  */
 public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWritable, Text> {
 
+	private static final Logger logger = LogManager.getLogger();
 	private FSDataInputStream fileInputStream;
 	private CompressionInputStream compressionFileInputStream;
 	private Seekable filePos;
@@ -101,10 +104,10 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		start = split.getStart();
 		end = start + split.getLength();
 
-		System.err.println("SequenceRecordReader: Input buffer size "+bufferSize);
+		logger.info("input buffer size {}", bufferSize);
 
 		// open the file
-		System.err.println("SequenceRecordReader: Open input split "+split.toString());
+		logger.info("opening input split {}", split.toString());
 		fileInputStream = file.getFileSystem(conf).open(file);
 
 		// Check if input file is compressed
@@ -115,7 +118,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			decompressor = CodecPool.getDecompressor(codec);
 
 			if (codec instanceof SplittableCompressionCodec) {
-				System.err.println("SequenceRecordReader: Input split is compressed using a splittable codec ("+codec.getClass().getSimpleName()+")");
+				logger.info("input split is compressed using a splittable codec ({})", codec.getClass().getSimpleName());
 
 				// Get split compression input stream
 				compressionFileInputStream = ((SplittableCompressionCodec) codec)
@@ -127,7 +130,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 				end = ((SplitCompressionInputStream) compressionFileInputStream).getAdjustedEnd();
 				filePos = compressionFileInputStream;
 			} else {
-				System.err.println("SequenceRecordReader: Input split is compressed using a non-splittable codec ("+codec.getClass().getSimpleName()+")");
+				logger.info("input split is compressed using a non-splittable codec ({})", codec.getClass().getSimpleName());
 
 				if (start != 0) {
 					/*
@@ -147,7 +150,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			}
 
 		} else {
-			System.err.println("SequenceRecordReader: Input split is not compressed");
+			logger.info("input split is not compressed");
 			isCompressedInput = false;
 
 			// Seek to the start of the split
@@ -165,13 +168,13 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		 */
 		if (start != 0) {
 			start += readLine(value);
-			System.err.println("SequenceRecordReader: skipped '"+value+"'");
+			logger.debug("skipped '{}'", value);
 			value.clear();
 		}
 
 		pos = start;
 
-		System.err.println("SequenceRecordReader initialized: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		logger.info("record reader initialized: start {}, end {}, splitPos {}", start, end, getSplitPosition());
 	}
 
 	@Override

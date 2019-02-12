@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
@@ -33,6 +35,7 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
  */
 public class FastQRecordReader extends SingleEndSequenceRecordReader {
 
+	private static final Logger logger = LogManager.getLogger();
 	private static final int NUMBER_OF_LINES_PER_READ = 4;
 	private static final Text FASTQ_COMMENT_LINE = new Text("+" + LineReader.LF);
 
@@ -54,7 +57,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
 
 		if (isSplitFinished())
 			return false;
@@ -67,7 +70,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 				return false;
 
 			if (found && i == NUMBER_OF_LINES_PER_READ) {
-				//System.err.println("nextKeyValue: last line and starting '@' has been previously found");
+				logger.trace("last line and starting '@' has been previously found");
 				numReads++;
 				key.set(start+numReads);
 				value.append(newLine.getBytes(), 0, newLine.getLength());
@@ -75,7 +78,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (newLine.charAt(0) == '@') {
-				//System.err.println("nextKeyValue: starting '@' has been found at line "+i);
+				logger.trace("starting '@' has been found at line {}", i);
 				found = true;
 
 				secondRead = readLine(temp);
@@ -106,12 +109,12 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (i == NUMBER_OF_LINES_PER_READ) {
-				//System.err.println("nextKeyValue: last line and no starting '@' has been found (discard previous data)");
+				logger.trace("last line and no starting '@' has been found (discarding previous data)");
 				i = 0;
 			}
 		}
 
-		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
 
 		return true;
 	}

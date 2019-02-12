@@ -20,26 +20,34 @@
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	<hadoop.version>2.2.0</hadoop.version>
   	<junit.version>3.8.1</junit.version>
+	<log4j2.version>2.11.1</log4j2.version>
 	<maven.compiler.version>3.7.0</maven.compiler.version>
 	<maven.compiler.source>1.6</maven.compiler.source>
 	<maven.compiler.target>1.6</maven.compiler.target>
   </properties>
 
   <dependencies>
-  	<!-- Apache Hadoop -->
 	<dependency>
 	    <groupId>org.apache.hadoop</groupId>
 	    <artifactId>hadoop-client</artifactId>
 	    <version>${hadoop.version}</version>
 	    <scope>provided</scope>
 	</dependency>
-	
-	<!-- JUnit -->
 	<dependency>
 		<groupId>junit</groupId>
 		<artifactId>junit</artifactId>
 		<version>${junit.version}</version>
 		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.logging.log4j</groupId>
+		<artifactId>log4j-api</artifactId>
+		<version>${log4j2.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.logging.log4j</groupId>
+		<artifactId>log4j-core</artifactId>
+		<version>${log4j2.version}</version>
 	</dependency>
   </dependencies>
 

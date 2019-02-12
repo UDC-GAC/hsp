@@ -36,6 +36,8 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Text-based InputFormat for paired-end sequence files.
@@ -46,6 +48,7 @@ import org.apache.hadoop.util.StringUtils;
  */
 public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 
+	private static final Logger logger = LogManager.getLogger();
 	public static final String LEFT_INPUT_PATH = "hsra.paired.left.path";
 	public static final String RIGHT_INPUT_PATH = "hsra.paired.right.path";
 	public static final String LEFT_INPUT_FORMAT = "hsra.paired.left.inputformat";
@@ -172,9 +175,11 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 		List<InputSplit> rightSplits;
 		try {
 			leftSplits = getInputSplits(job, leftPath, leftInputFormat);
-			System.err.println(leftSplits);
 			rightSplits = getInputSplits(job, rightPath, rightInputFormat);
-			System.err.println(rightSplits);
+			if (logger.isDebugEnabled()) {
+				logger.debug(leftSplits);
+				logger.debug(rightSplits);
+			}
 		} catch (ClassNotFoundException e) {
 			throw new IOException(e.getMessage());
 		}

@@ -22,6 +22,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
@@ -33,6 +35,7 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
  */
 public class FastARecordReader extends SingleEndSequenceRecordReader {
 
+	private static final Logger logger = LogManager.getLogger();
 	private Text newLine;
 	private long numReads;
 
@@ -48,7 +51,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
 
 		if (isSplitFinished())
 			return false;
@@ -56,7 +59,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		while (true) {
 			read = readLine(newLine);
 
-			//System.err.println("nextKeyValue: read "+read+", start "+start+", end "+end+", splitPos "+getSplitPosition());
+			logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
 
 			if (read == 0) {
 				// EOF
@@ -66,7 +69,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (newLine.charAt(0) == '>') {
-				//System.err.println("nextKeyValue: starting '>' has been found");
+				logger.trace("starting '>' has been found");
 
 				if (found) {
 					seek(getLineReaderPosition() - read);
@@ -85,7 +88,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				value.append(newLine.getBytes(), 0, newLine.getLength());
 		}
 
-		//System.err.println("nextKeyValue: start "+start+", end "+end+", splitPos "+getSplitPosition());
+		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
 
 		return true;
 	}
