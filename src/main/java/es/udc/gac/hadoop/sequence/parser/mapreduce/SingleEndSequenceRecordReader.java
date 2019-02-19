@@ -104,7 +104,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		start = split.getStart();
 		end = start + split.getLength();
 
-		logger.info("input buffer size {}", bufferSize);
+		logger.debug("input buffer size {}", bufferSize);
 
 		// open the file
 		logger.info("opening input split {}", split.toString());
@@ -174,7 +174,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 		pos = start;
 
-		logger.info("record reader initialized: start {}, end {}, splitPos {}", start, end, getSplitPosition());
+		logger.debug("record reader initialized: start {}, end {}, splitPos {}", start, end, getSplitPosition());
 	}
 
 	@Override
