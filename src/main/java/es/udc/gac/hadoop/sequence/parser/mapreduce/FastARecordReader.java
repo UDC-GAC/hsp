@@ -68,7 +68,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				return false;
 			}
 
-			if (newLine.charAt(0) == '>') {
+			if (newLine.getBytes()[0] == '>') {
 				logger.trace("starting '>' has been found");
 
 				if (found) {

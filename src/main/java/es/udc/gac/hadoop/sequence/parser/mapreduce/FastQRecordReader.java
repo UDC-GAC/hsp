@@ -77,7 +77,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 				break;
 			}
 
-			if (newLine.charAt(0) == '@') {
+			if (newLine.getBytes()[0] == '@') {
 				logger.trace("starting '@' has been found at line {}", i);
 				found = true;
 
@@ -86,7 +86,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 				if (secondRead == 0) //EOF
 					return false;
 
-				if (temp.charAt(0) != '@') {
+				if (temp.getBytes()[0] != '@') {
 					i = 2;
 					//Trim spaces in sequence name
 					LineReader.trim(newLine, ' ', 1);
