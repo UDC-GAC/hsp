@@ -38,7 +38,7 @@ In order to use the HSP library in your projects, add the following dependency s
 ...
 </dependencies>
 ```
-HSP generates <key,value> pairs of type <LongWritable, Text>. For single-end datasets, the key is a unique self-generated identifier for each read within the input split and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). For paired-end datasets, the key provides the length (in bytes) of a single read in the pair and the value is the merged content of both reads. If needed, HSP provides utility methods that allows obtaining ``left'' and ``right'' reads separately as String objects: getLeftRead and getRightRead, respectively.
+HSP generates <key,value> pairs of type <LongWritable, Text>. For single-end datasets, the key is a unique self-generated identifier for each read within the input split and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). For paired-end datasets, the key provides the length (in bytes) of a single read in the pair and the value is the merged content of both reads. If needed, HSP provides utility methods that allows obtaining "left" and "right" reads separately as String objects: getLeftRead and getRightRead, respectively.
 
 ### Spark example in Java
 
@@ -47,7 +47,23 @@ Creating a Spark RDD from a single-end dataset in FASTQ format stored in "/path/
 ```java
 SparkSession sparkSession = SparkSession.builder().config(new SparkConf()).getOrCreate();		
 JavaSparkContext jsc = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
-JavaPairRDD<LongWritable,Text> readsRDD = jsc.newAPIHadoopFile("/path/to/file", FastQInputFormat.class;, LongWritable.class, Text.class, jsc.hadoopConfiguration());
+
+// Create RDD
+JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("/path/to/file", FastQInputFormat.class;, LongWritable.class, Text.class, jsc.hadoopConfiguration());
+```
+
+Creating a Spark RDD from a paired-end dataset in FASTA format stored in "/path/to/file1" and "/path/to/file2":
+
+```java
+SparkSession sparkSession = SparkSession.builder().config(new SparkConf()).getOrCreate();		
+JavaSparkContext jsc = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
+
+// Set left and right input paths for HSP (files are in FASTA format)
+PairedEndSequenceInputFormat.setLeftInputPath(config, "/path/to/file1", FastAInputFormat.class);
+PairedEndSequenceInputFormat.setRightInputPath(config, "/path/to/file2", FastAInputFormat.class);
+
+// Create RDD
+JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("path/to/file1", PairedEndSequenceInputFormat.class, LongWritable.class, Text.class, jsc.hadoopConfiguration());
 ```
 
 ## Projects using HSP
