@@ -1,6 +1,6 @@
 # Hadoop Sequence Parser (HSP)
 
-**Hadoop Sequence Parser (HSP)** is a Java library that allows to parse DNA/RNA sequence reads from FASTQ/FASTA datasets stored in the Hadoop Distributed File System (HDFS).
+**Hadoop Sequence Parser (HSP)** is a Java library that allows to parse DNA sequence reads from FASTQ/FASTA datasets stored in the Hadoop Distributed File System (HDFS).
 
 HSP supports the processing of input datasets compressed with Gzip (i.e., .gz extension) and BZip2 (i.e., .bz2 extension) codecs. However, when considering compressed data that will be later processed by Hadoop or any other data processing engine (e.g., Spark), it is important to understand whether the underlying compression format supports splitting, as many codecs need the whole input stream to uncompress successfully. On the one hand, Gzip does not support splitting and HSP will not split the gzipped input dataset. This will work, but probably at the expense of performance. On the other hand, BZip2 does compression on blocks of data and later these compressed blocks can be decompressed independent of each other, so it does support splitting. Therefore, BZip2 is the recommended codec to use with HSP for best performance.
 
@@ -38,7 +38,8 @@ In order to use the HSP library in your projects, add the following dependency s
 ...
 </dependencies>
 ```
-HSP generates <key,value> pairs of type <LongWritable, Text>. For single-end datasets, the key is a unique self-generated identifier for each read within the input split and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). For paired-end datasets, the key provides the length (in bytes) of a single read in the pair and the value is the merged content of both reads. If needed, HSP provides utility methods that allows obtaining "left" and "right" reads separately as String objects: getLeftRead and getRightRead, respectively.
+
+HSP generates <key,value> pairs of type <*LongWritable*, *Text*>. For single-end datasets, the key is a unique self-generated identifier for each read within the input split and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). The *Text* object representing the sequence can be obtained as *String* using the static method *getRead()* provided by the *SingleEndSequenceRecordReader* class. For paired-end datasets, the key provides the length (in bytes) of a single read in the pair and the value is the merged content of both reads. HSP also provides static methods in the *PairedEndSequenceRecordReader* class that allows obtaining "left" and "right" reads separately as String objects: *getLeftRead()* and *getRightRead()*, respectively.
 
 ### Hadoop examples
 
@@ -53,7 +54,7 @@ Path inputFile = new Path("/path/to/file");
 SingleEndSequenceInputFormat.addInputPath(job, inputFile);
 job.setInputFormatClass(FastQInputFormat.class);        
 ```
-Setting up the input format of a Hadoop job for a paired-end dataset in FASTQ format stored in "/path/to/file" and and "/path/to/file2":
+Setting up the input format of a Hadoop job for a paired-end dataset in FASTQ format stored in "/path/to/file" and "/path/to/file2":
 
 ```java
 Configuration conf = new Configuration();
