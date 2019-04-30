@@ -42,8 +42,8 @@ In order to use the HSP library in your projects, add the following dependency s
 
 * [MarDRe: MapReduce-based parallel tool to remove duplicate DNA reads](http://mardre.des.udc.es)
 * [HSRA: Hadoop Spliced Read Aligner for RNA sequencing data](http://hsra.dec.udc.es)
-* [HMusket: k-mer spectrum corrector based on Hadoop](https://github.com/luislorenzom/hmusket)
 * [SeQual: Parallel tool to perform quality control and data preprocessing of large NGS datasets](https://github.com/roigalegot/SeQual)
+* [SMusket: Spark-based DNA error correction on distributed-memory systems](https://github.com/rreye/smusket)
 
 ## Authors
 
