@@ -103,6 +103,8 @@ JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("path/to/file1",
 
 ## Authors
 
+HSP is developed in the [Computer Architecture Group](http://gac.udc.es/english) at the [Universidade da Coruña](https://www.udc.es/en) by:
+
 * **Roberto R. Expósito** (http://gac.udc.es/~rreye)
 * **Luis Lorenzo Mosquera** (https://github.com/luislorenzom)
 * **Jorge González-Domínguez** (http://gac.udc.es/~jgonzalezd)
