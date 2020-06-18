@@ -96,10 +96,11 @@ JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("path/to/file1",
 
 ## Projects using HSP
 
-* [MarDRe: MapReduce-based parallel tool to remove duplicate DNA reads](http://mardre.des.udc.es)
-* [HSRA: Hadoop Spliced Read Aligner for RNA sequencing data](http://hsra.dec.udc.es)
-* [SeQual: Parallel tool to perform quality control and data preprocessing of large NGS datasets](https://github.com/roigalegot/SeQual)
-* [SMusket: Spark-based DNA error correction on distributed-memory systems](https://github.com/rreye/smusket)
+* [MarDRe](http://mardre.des.udc.es)
+* [HSRA](http://hsra.dec.udc.es)
+* [SeQual](https://github.com/roigalegot/SeQual)
+* [SMusket](https://github.com/rreye/smusket)
+* [SparkEC](https://github.com/mscrocker/SparkEC)
 
 ## Authors
 
