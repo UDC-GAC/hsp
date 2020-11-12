@@ -2,7 +2,7 @@
 
 **Hadoop Sequence Parser (HSP)** is a Java library that allows to parse DNA sequence reads from FASTQ/FASTA datasets stored in the Hadoop Distributed File System (HDFS).
 
-HSP supports the processing of input datasets compressed with Gzip (i.e., .gz extension) and BZip2 (i.e., .bz2 extension) codecs. However, when considering compressed data that will be later processed by Hadoop or any other data processing engine (e.g., Spark), it is important to understand whether the underlying compression format supports splitting, as many codecs need the whole input stream to uncompress successfully. On the one hand, Gzip does not support splitting and HSP will not split the gzipped input dataset. This will work, but probably at the expense of performance. On the other hand, BZip2 does compression on blocks of data and later these compressed blocks can be decompressed independent of each other, so it does support splitting. Therefore, BZip2 is the recommended codec to use with HSP for best performance.
+HSP supports the processing of input datasets compressed with Gzip (i.e., .gz extension) and BZip2 (i.e., .bz2 extension) codecs. However, when considering compressed data that will be later processed by Hadoop or any other data processing engine (e.g., Spark), it is important to understand whether the underlying compression format supports splitting, as many codecs need the whole input stream to uncompress successfully. On the one hand, Gzip does not support splitting and HSP will not split the gzipped input dataset. This will work, but probably at the expense of lower performance. On the other hand, BZip2 does compression on blocks of data and later these blocks can be decompressed independent of each other (i.e.,  it supports splitting). Therefore, BZip2 is the recommended codec to use with HSP for better performance.
 
 ## Getting Started
 
@@ -33,7 +33,7 @@ In order to use the HSP library in your projects, add the following dependency s
   <dependency>
    <groupId>es.udc.gac</groupId>
    <artifactId>hadoop-sequence-parser</artifactId>
-   <version>1.0</version> <!-- or latest version -->
+   <version>1.1</version> <!-- or latest version -->
   </dependency>
 ...
 </dependencies>
@@ -51,7 +51,7 @@ Path inputFile = new Path("/path/to/file");
 
 //Set input path and input format class for HSP
 SingleEndSequenceInputFormat.addInputPath(job, inputFile);
-job.setInputFormatClass(FastQInputFormat.class);        
+job.setInputFormatClass(FastQInputFormat.class);
 ```
 Setting up the input format of a Hadoop job for a paired-end dataset in FASTQ format stored in "/path/to/file" and "/path/to/file2":
 
@@ -61,7 +61,7 @@ Path inputFile1 = new Path("/path/to/file1");
 Path inputFile2 = new Path("/path/to/file2");
 
 //Set input format class and input paths for HSP
-job.setInputFormatClass(PairedEndSequenceInputFormat.class);       
+job.setInputFormatClass(PairedEndSequenceInputFormat.class);
 PairedEndSequenceInputFormat.setLeftInputPath(job, inputFile1, FastQInputFormat.class);
 PairedEndSequenceInputFormat.setRightInputPath(job, inputFile2, FastQInputFormat.class);
 ```
@@ -71,27 +71,57 @@ PairedEndSequenceInputFormat.setRightInputPath(job, inputFile2, FastQInputFormat
 Creating a Spark RDD from a single-end dataset in FASTQ format stored in "/path/to/file" using Java:
 
 ```java
-SparkSession sparkSession = SparkSession.builder().config(new SparkConf()).getOrCreate();		
+SparkSession sparkSession = SparkSession.builder().config(new SparkConf()).getOrCreate();
 JavaSparkContext jsc = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
-Configuration hadoopConfig = jsc.hadoopConfiguration();
+Configuration config = jsc.hadoopConfiguration();
 
 // Create RDD
-JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("/path/to/file", FastQInputFormat.class, LongWritable.class, Text.class, hadoopConfig);
+JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("/path/to/file", FastQInputFormat.class, LongWritable.class, Text.class, config);
 ```
 
-Creating a Spark RDD from a paired-end dataset in FASTA format stored in "/path/to/file1" and "/path/to/file2" using Java:
+Creating a Spark RDD from a paired-end dataset in FASTQ format stored in "/path/to/file1" and "/path/to/file2" using Java:
 
 ```java
-SparkSession sparkSession = SparkSession.builder().config(new SparkConf()).getOrCreate();		
+SparkSession sparkSession = SparkSession.builder().config(new SparkConf()).getOrCreate();
 JavaSparkContext jsc = JavaSparkContext.fromSparkContext(sparkSession.sparkContext());
-Configuration hadoopConfig = jsc.hadoopConfiguration();
+Configuration config = jsc.hadoopConfiguration();
 
 // Set left and right input paths for HSP
-PairedEndSequenceInputFormat.setLeftInputPath(config, "/path/to/file1", FastAInputFormat.class);
-PairedEndSequenceInputFormat.setRightInputPath(config, "/path/to/file2", FastAInputFormat.class);
+PairedEndSequenceInputFormat.setLeftInputPath(config, "/path/to/file1", FastQInputFormat.class);
+PairedEndSequenceInputFormat.setRightInputPath(config, "/path/to/file2", FastQInputFormat.class);
 
 // Create RDD
-JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("path/to/file1", PairedEndSequenceInputFormat.class, LongWritable.class, Text.class, hadoopConfig);
+JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("path/to/file1", PairedEndSequenceInputFormat.class, LongWritable.class, Text.class, config);
+```
+
+### Flink examples
+
+Creating a Flink DataSet from a single-end dataset in FASTQ format stored in "/path/to/file" using Java:
+
+```java
+ExecutionEnvironment flinkExecEnv = ExecutionEnvironment.getExecutionEnvironment();
+Job hadoopJob = Job.getInstance();
+
+// Set input path for HSP
+SingleEndSequenceInputFormat.setInputPaths(hadoopJob, "/path/to/file");
+
+// Create DataSet
+DataSet<Tuple2<LongWritable,Text>> readsDS = flinkExecEnv.createInput(new HadoopInputFormat<LongWritable,Text>(FastQInputFormat.class, LongWritable.class, Text.class, hadoopJob));
+```
+
+Creating a Flink DataSet from a paired-end dataset in FASTQ format stored in "/path/to/file1" and "/path/to/file2" using Java:
+
+```java
+ExecutionEnvironment flinkExecEnv = ExecutionEnvironment.getExecutionEnvironment();
+Job hadoopJob = Job.getInstance();
+Configuration config = hadoopJob.getConfiguration();
+
+// Set left and right input paths for HSP
+PairedEndSequenceInputFormat.setLeftInputPath(config, "/path/to/file1", FastQInputFormat.class);
+PairedEndSequenceInputFormat.setRightInputPath(config, "/path/to/file2", FastQInputFormat.class);
+
+// Create DataSet
+DataSet<Tuple2<LongWritable, Text>> readsDS = flinkExecEnv.createInput(new HadoopInputFormat<LongWritable, Text>(new PairedEndSequenceInputFormat(), LongWritable.class, Text.class, hadoopJob));
 ```
 
 ## Projects using HSP
