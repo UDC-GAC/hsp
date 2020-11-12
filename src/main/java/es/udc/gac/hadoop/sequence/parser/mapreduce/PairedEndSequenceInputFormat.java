@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Universidade da Coruña
+ * Copyright (C) 2020 Universidade da Coruña
  * 
  * This file is part of HSP.
  * 
@@ -261,5 +261,4 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 				throw new IOException("Input path ("+inputPath+") is empty");
 		}
 	}
-
 }

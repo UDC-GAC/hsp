@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Universidade da Coruña
+ * Copyright (C) 2020 Universidade da Coruña
  * 
  * This file is part of HSP.
  * 
@@ -88,13 +88,17 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 
 				if (temp.getBytes()[0] != '@') {
 					i = 2;
-					//Trim spaces in sequence name
-					LineReader.trim(newLine, ' ', 1);
+					if (getTrimSequenceName()) {
+						//Trim spaces in sequence name
+						LineReader.trim(newLine, ' ', 1);
+					}
 					newLine.append(temp.getBytes(), 0, temp.getLength());
 				} else {
 					i = 1;
-					//Trim spaces in sequence name
-					LineReader.trim(temp, ' ', 1);
+					if (getTrimSequenceName()) {
+						//Trim spaces in sequence name
+						LineReader.trim(temp, ' ', 1);
+					}
 					value.append(temp.getBytes(), 0, temp.getLength());
 					continue;
 				}

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Universidade da Coruña
+ * Copyright (C) 2020 Universidade da Coruña
  * 
  * This file is part of HSP.
  * 
@@ -57,6 +57,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 	private CompressionInputStream compressionFileInputStream;
 	private Seekable filePos;
 	private boolean isCompressedInput;
+	private boolean trimSequenceName;
 	private Decompressor decompressor;
 	private LineReader lineReader;
 	private int bufferSize;
@@ -68,6 +69,7 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 	public SingleEndSequenceRecordReader(TaskAttemptContext context) {
 		bufferSize = Configuration.getInputBufferSize(context.getConfiguration());
+		trimSequenceName = Configuration.getTrimSequenceName(context.getConfiguration());
 		key = new LongWritable();
 		value = new Text(new byte[bufferSize]);
 		start = pos = end = 0;
@@ -203,6 +205,10 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 	protected long getLineReaderPosition() throws IOException {
 		return lineReader.getPos();
+	}
+
+	protected boolean getTrimSequenceName() throws IOException {
+		return trimSequenceName;
 	}
 
 	protected boolean isSplitFinished() throws IOException {

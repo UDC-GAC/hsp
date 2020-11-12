@@ -4,7 +4,7 @@
 
   <groupId>es.udc.gac</groupId>
   <artifactId>hadoop-sequence-parser</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <packaging>jar</packaging>
 
   <name>HSP</name>
@@ -18,10 +18,10 @@
 
   <properties>
 	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	<hadoop.version>2.2.0</hadoop.version>
-  	<junit.version>3.8.1</junit.version>
-	<log4j2.version>2.11.1</log4j2.version>
-	<maven.compiler.version>3.7.0</maven.compiler.version>
+	<hadoop.version>2.4.0</hadoop.version>
+  	<junit.version>4.13.1</junit.version>
+	<log4j2.version>2.14.0</log4j2.version>
+	<maven.compiler.version>3.8.1</maven.compiler.version>
 	<maven.compiler.source>1.6</maven.compiler.source>
 	<maven.compiler.target>1.6</maven.compiler.target>
   </properties>

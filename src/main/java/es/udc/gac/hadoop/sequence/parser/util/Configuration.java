@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Universidade da Coruña
+ * Copyright (C) 2020 Universidade da Coruña
  * 
  * This file is part of HSP.
  * 
@@ -26,8 +26,10 @@ package es.udc.gac.hadoop.sequence.parser.util;
  */
 public final class Configuration {
 
-	private static final String INPUT_BUFFER_SIZE = "hdfs.sequence.parser.buffer.size";
-	private static final int INPUT_BUFFER_SIZE_DEFAULT = 8192;
+	private static final String INPUT_BUFFER_SIZE = "hsp.input.buffer.size";
+	private static final int INPUT_BUFFER_SIZE_DEFAULT = 64*1024;
+	private static final String TRIM_SEQUENCE_NAME = "hsp.trim.sequence.name";
+	private static final boolean TRIM_SEQUENCE_NAME_DEFAULT = true;
 
 	public static int getInputBufferSize(org.apache.hadoop.conf.Configuration conf) {
 		return conf.getInt(INPUT_BUFFER_SIZE, INPUT_BUFFER_SIZE_DEFAULT);
@@ -35,5 +37,13 @@ public final class Configuration {
 
 	public static void setInputBufferSize(org.apache.hadoop.conf.Configuration conf, int bufferSize) {
 		conf.setInt(INPUT_BUFFER_SIZE, bufferSize);
+	}
+
+	public static void setTrimSequenceName(org.apache.hadoop.conf.Configuration conf, boolean trimSequenceName) {
+		conf.setBoolean(TRIM_SEQUENCE_NAME, trimSequenceName); 
+	}
+
+	public static boolean getTrimSequenceName(org.apache.hadoop.conf.Configuration conf) {
+		return conf.getBoolean(TRIM_SEQUENCE_NAME, TRIM_SEQUENCE_NAME_DEFAULT); 
 	}
 }

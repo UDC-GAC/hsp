@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 Universidade da Coruña
+ * Copyright (C) 2020 Universidade da Coruña
  * 
  * This file is part of HSP.
  * 
@@ -78,8 +78,10 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				} else {
 					numReads++;
 					key.set(start+numReads);
-					//Trim spaces in sequence name
-					LineReader.trim(newLine, ' ', 1);
+					if (getTrimSequenceName()) {
+						//Trim spaces in sequence name
+						LineReader.trim(newLine, ' ', 1);
+					}
 					found = true;
 				}
 			}
