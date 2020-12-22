@@ -90,14 +90,14 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 					i = 2;
 					if (getTrimSequenceName()) {
 						//Trim spaces in sequence name
-						LineReader.trim(newLine, ' ', 1);
+						LineReader.trim(newLine, 2);
 					}
 					newLine.append(temp.getBytes(), 0, temp.getLength());
 				} else {
 					i = 1;
 					if (getTrimSequenceName()) {
 						//Trim spaces in sequence name
-						LineReader.trim(temp, ' ', 1);
+						LineReader.trim(temp, 2);
 					}
 					value.append(temp.getBytes(), 0, temp.getLength());
 					continue;

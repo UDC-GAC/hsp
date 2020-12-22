@@ -129,17 +129,16 @@ public class LineReader implements Closeable {
 	}
 
 	/**
-	 * Finds the first occurence of <code>what</code> in the backing
-	 * buffer of <code>text</code>, starting as position 
+	 * Finds the first blank space in the backing
+	 * buffer of <code>text</code> starting as position 
 	 * <code>start</code>, and then trims <code>text</code>.
 	 * The starting position is measured in bytes.
 	 * 
 	 * @param text Text to trim
-	 * @param what Character to find in text
 	 * @param start Starting byte position
 	 */
-	public static void trim(Text text, char what, int start) {
-		int pos = text.find(String.valueOf(what), start);
+	public static void trim(Text text, int start) {
+		int pos = text.find(" ", start);
 
 		if (pos != -1) {
 			text.getBytes()[pos] = LF_BYTE;

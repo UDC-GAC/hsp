@@ -80,7 +80,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 					key.set(start+numReads);
 					if (getTrimSequenceName()) {
 						//Trim spaces in sequence name
-						LineReader.trim(newLine, ' ', 1);
+						LineReader.trim(newLine, 1);
 					}
 					found = true;
 				}
