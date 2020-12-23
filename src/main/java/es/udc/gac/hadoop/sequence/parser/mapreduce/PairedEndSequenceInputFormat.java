@@ -27,12 +27,15 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hadoop.io.compress.SplittableCompressionCodec;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
@@ -46,13 +49,59 @@ import org.apache.logging.log4j.Logger;
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>
  * @author Jorge González-Domínguez	<jgonzalezd@udc.es> 
  */
-public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
+public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, PairText> {
 
 	private static final Logger logger = LogManager.getLogger();
+	private static final double SPLIT_SLOP = 1.1; // 10% slop
+
 	public static final String LEFT_INPUT_PATH = "hsra.paired.left.path";
 	public static final String RIGHT_INPUT_PATH = "hsra.paired.right.path";
 	public static final String LEFT_INPUT_FORMAT = "hsra.paired.left.inputformat";
 	public static final String RIGHT_INPUT_FORMAT = "hsra.paired.right.inputformat";
+
+	@Override
+	protected boolean isSplitable(JobContext context, Path file) {
+		final CompressionCodec codec = new CompressionCodecFactory(context.getConfiguration()).getCodec(file);
+		if (null == codec) {
+			return true;
+		}
+		return codec instanceof SplittableCompressionCodec;
+	}
+
+	/**
+	 * Get the number of possible splits from one file 
+	 * 
+	 * @param inputPath
+	 * @param File's length
+	 * @param if the file can be splitable
+	 * @param the split's size 
+	 * @return The number of file's splits
+	 * @throws IOException if you have any problem opening or reading the file
+	 */
+	public static int getNumberOfSplits(Path inputPath, long inputPathLength, boolean inputPathSplitable,
+			long splitSize) throws IOException {
+
+		int nsplits = 0;
+		long length = inputPathLength;
+
+		if (length != 0) {
+			if (inputPathSplitable) {
+				long bytesRemaining = length;
+
+				while (((double) bytesRemaining) / splitSize > SPLIT_SLOP) {
+					nsplits++;
+					bytesRemaining -= splitSize;
+				}
+
+				if (bytesRemaining != 0)
+					nsplits++;
+			} else { // not splitable
+				nsplits = 1;
+			}
+		}
+
+		return nsplits;
+	}
 
 	/**
 	 * 
@@ -141,7 +190,7 @@ public class PairedEndSequenceInputFormat extends SingleEndSequenceInputFormat {
 	}
 
 	@Override
-	public RecordReader<LongWritable, Text> createRecordReader(InputSplit split, TaskAttemptContext context)
+	public RecordReader<LongWritable, PairText> createRecordReader(InputSplit split, TaskAttemptContext context)
 			throws IOException, InterruptedException {
 
 		return new PairedEndSequenceRecordReader((PairedEndCompositeInputSplit) split, context);

@@ -36,13 +36,14 @@ import org.apache.hadoop.util.ReflectionUtils;
  * @author Luis Lorenzo Mosquera	<luis.lorenzom@udc.es>
  * @author Jorge González-Domínguez	<jgonzalezd@udc.es>
  */
-public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Text> {
+public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, PairText> {
 
 	// Sequence record readers to get key-value pairs from single-end datasets
 	private SingleEndSequenceRecordReader leftRR;
 	private SingleEndSequenceRecordReader rightRR;
 	private LongWritable key;
-	private Text value;
+	private PairText value;
+	private Text left, right;
 
 	public PairedEndSequenceRecordReader(PairedEndCompositeInputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
@@ -64,7 +65,9 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 		}
 
 		key = new LongWritable();
-		value = null;
+		value = new PairText();
+		left = null;
+		right = null;
 	}
 
 	@Override
@@ -73,7 +76,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 	}
 
 	@Override
-	public Text getCurrentValue() {
+	public PairText getCurrentValue() {
 		return value;
 	}
 
@@ -105,13 +108,15 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 			if(leftRR.getCurrentKey().get() != rightRR.getCurrentKey().get())
 				throw new IOException("Unexpected different keys");
 
-			value = leftRR.getCurrentValue();
+			left = leftRR.getCurrentValue();
+			right = rightRR.getCurrentValue();
 
-			if(value.getLength() != rightRR.getCurrentValue().getLength())
+			if(left.getLength() != right.getLength())
 				throw new IOException("Unexpected different lengths");
 
-			key.set(value.getLength());
-			value.append(rightRR.getCurrentValue().getBytes(), 0, rightRR.getCurrentValue().getLength());
+			key.set(leftRR.getCurrentKey().get());
+			value.setLeft(left);
+			value.setRight(right);
 			return true;
 		}
 
@@ -121,12 +126,11 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Te
 		return false;
 	}
 
-	public static String getLeftRead(LongWritable key, Text pairedRead) throws CharacterCodingException {
-		return Text.decode(pairedRead.getBytes(), 0, (int) key.get(), false);
+	public static String getLeftRead(PairText pairedRead) throws CharacterCodingException {
+		return Text.decode(pairedRead.getLeft().getBytes(), 0, pairedRead.getLeft().getLength(), false);
 	}
 
-	public static String getRightRead(LongWritable key, Text pairedRead) throws CharacterCodingException {
-		int length = (int) key.get();
-		return Text.decode(pairedRead.getBytes(), length, length, false);
+	public static String getRightRead(PairText pairedRead) throws CharacterCodingException {
+		return Text.decode(pairedRead.getRight().getBytes(), 0, pairedRead.getRight().getLength(), false);
 	}
 }

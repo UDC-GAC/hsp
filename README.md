@@ -39,7 +39,9 @@ In order to use the HSP library in your projects, add the following dependency s
 </dependencies>
 ```
 
-HSP generates <key,value> pairs of type <*LongWritable*, *Text*>. For single-end datasets, the key is a unique self-generated identifier for each read within the input split and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). The *Text* object representing the sequence can be converted to a *String* object using the static method *getRead()* provided by the *SingleEndSequenceRecordReader* class. For paired-end datasets, the key provides the length (in bytes) of a single read in the pair and the value is the merged content of both reads. HSP provides static methods in the *PairedEndSequenceRecordReader* class that allow obtaining "left" and "right" reads separately as *String* objects: *getLeftRead()* and *getRightRead()*, respectively.
+For single-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *Text*>. The key is a unique self-generated identifier for each read and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). The *Text* object representing the sequence can be converted to a *String* object using the static method *getRead()* provided by the *SingleEndSequenceRecordReader* class.
+
+For paired-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *PairText*>. The key is a unique self-generated identifier for each paired read and the value is a tuple containing the pair of *Text* objects that represent the paired sequence. HSP provides static methods in the *PairedEndSequenceRecordReader* class that allow obtaining "left" and "right" reads separately as *String* objects: *getLeftRead()* and *getRightRead()*, respectively.
 
 ### Hadoop examples
 
@@ -91,7 +93,7 @@ PairedEndSequenceInputFormat.setLeftInputPath(config, "/path/to/file1", FastQInp
 PairedEndSequenceInputFormat.setRightInputPath(config, "/path/to/file2", FastQInputFormat.class);
 
 // Create RDD
-JavaPairRDD<LongWritable, Text> readsRDD = jsc.newAPIHadoopFile("path/to/file1", PairedEndSequenceInputFormat.class, LongWritable.class, Text.class, config);
+JavaPairRDD<LongWritable, PairText> readsRDD = jsc.newAPIHadoopFile("path/to/file1", PairedEndSequenceInputFormat.class, LongWritable.class, PairText.class, config);
 ```
 
 ### Flink examples
@@ -121,7 +123,7 @@ PairedEndSequenceInputFormat.setLeftInputPath(config, "/path/to/file1", FastQInp
 PairedEndSequenceInputFormat.setRightInputPath(config, "/path/to/file2", FastQInputFormat.class);
 
 // Create DataSet
-DataSet<Tuple2<LongWritable, Text>> readsDS = flinkExecEnv.createInput(new HadoopInputFormat<LongWritable, Text>(new PairedEndSequenceInputFormat(), LongWritable.class, Text.class, hadoopJob));
+DataSet<Tuple2<LongWritable, PairText>> readsDS = flinkExecEnv.createInput(new HadoopInputFormat<LongWritable, PairText>(new PairedEndSequenceInputFormat(), LongWritable.class, PairText.class, hadoopJob));
 ```
 
 ## Projects using HSP

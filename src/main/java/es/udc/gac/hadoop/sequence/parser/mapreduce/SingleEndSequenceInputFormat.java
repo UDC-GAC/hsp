@@ -38,7 +38,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
  */
 public abstract class SingleEndSequenceInputFormat extends FileInputFormat<LongWritable, Text> {
 
-	protected static final double SPLIT_SLOP = 1.1; // 10% slop
+	private static final double SPLIT_SLOP = 1.1; // 10% slop
 
 	@Override
 	protected boolean isSplitable(JobContext context, Path file) {
@@ -54,7 +54,7 @@ public abstract class SingleEndSequenceInputFormat extends FileInputFormat<LongW
 	 * 
 	 * @param inputPath
 	 * @param File's length
-	 * @param if the file can be spliteble
+	 * @param if the file can be splitable
 	 * @param the split's size 
 	 * @return The number of file's splits
 	 * @throws IOException if you have any problem opening or reading the file
