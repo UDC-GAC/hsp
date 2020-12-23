@@ -33,7 +33,7 @@ In order to use the HSP library in your projects, add the following dependency s
   <dependency>
    <groupId>es.udc.gac</groupId>
    <artifactId>hadoop-sequence-parser</artifactId>
-   <version>1.1</version> <!-- or latest version -->
+   <version>1.2</version> <!-- or latest version -->
   </dependency>
 ...
 </dependencies>
