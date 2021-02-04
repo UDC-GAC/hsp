@@ -39,9 +39,9 @@ In order to use the HSP library in your projects, add the following dependency s
 </dependencies>
 ```
 
-For single-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *Text*>. The key is a unique self-generated identifier for each read and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). The *Text* object representing the sequence can be converted to a *String* object using the static method *getRead()* provided by the *SingleEndSequenceRecordReader* class.
+For single-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *Text*>. The key is the byte offset in file for each read and the value is the text-based content of the read (e.g., read name, bases and qualities for FASTQ). The *Text* object representing the sequence can be converted to a *String* object using the static method *getRead()* provided by the *SingleEndSequenceRecordReader* class.
 
-For paired-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *PairText*>. The key is a unique self-generated identifier for each paired read and the value is a tuple containing the pair of *Text* objects that represent the paired sequence. HSP provides static methods in the *PairedEndSequenceRecordReader* class that allow obtaining "left" and "right" reads separately as *String* objects: *getLeftRead()* and *getRightRead()*, respectively.
+For paired-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *PairText*>. The key is the byte offset in file for each paired read and the value is a tuple containing the pair of the *Text* objects that represent the paired sequence. HSP provides static methods in the *PairedEndSequenceRecordReader* class that allow obtaining "left" and "right" reads separately as *String* objects: *getLeftRead()* and *getRightRead()*, respectively.
 
 ### Hadoop examples
 

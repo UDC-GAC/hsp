@@ -37,12 +37,10 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 
 	private static final Logger logger = LogManager.getLogger();
 	private Text newLine;
-	private long numReads;
 
 	public FastARecordReader(TaskAttemptContext context) {
 		super(context);
 		newLine = new Text();
-		numReads = 0;
 	}
 
 	@Override
@@ -51,15 +49,17 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
+		logger.trace("init: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 		if (isSplitFinished())
 			return false;
 
+		key.set(pos);
+
 		while (true) {
 			read = readLine(newLine);
 
-			logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
+			logger.trace("start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 			if (read == 0) {
 				// EOF
@@ -76,8 +76,6 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 					pos -= read;
 					break;
 				} else {
-					numReads++;
-					key.set(start+numReads);
 					if (getTrimSequenceName()) {
 						//Trim spaces in sequence name
 						LineReader.trim(newLine, 1);
@@ -90,7 +88,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				value.append(newLine.getBytes(), 0, newLine.getLength());
 		}
 
-		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
+		logger.trace("finish: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 		return true;
 	}

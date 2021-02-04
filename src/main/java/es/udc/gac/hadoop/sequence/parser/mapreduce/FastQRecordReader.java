@@ -41,13 +41,11 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 
 	private Text newLine;
 	private Text temp;
-	private long numReads;
 
 	public FastQRecordReader(TaskAttemptContext context) {
 		super(context);
 		newLine = new Text();
 		temp = new Text();
-		numReads = 0;
 	}
 
 	@Override
@@ -57,10 +55,12 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
+		logger.trace("init: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 		if (isSplitFinished())
 			return false;
+
+		key.set(pos);
 
 		while (true) {
 			firstRead = readLine(newLine);
@@ -71,8 +71,6 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 
 			if (found && i == NUMBER_OF_LINES_PER_READ) {
 				logger.trace("last line and starting '@' has been previously found");
-				numReads++;
-				key.set(start+numReads);
 				value.append(newLine.getBytes(), 0, newLine.getLength());
 				break;
 			}
@@ -118,7 +116,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			}
 		}
 
-		logger.trace("start {}, end {}, splitPos {}", start, end, getSplitPosition());
+		logger.trace("finish: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 		return true;
 	}
