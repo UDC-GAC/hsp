@@ -203,11 +203,11 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		lineReader.seek(pos);
 	}
 
-	protected long getLineReaderPosition() throws IOException {
+	protected long getLineReaderPosition() {
 		return lineReader.getPos();
 	}
 
-	protected boolean getTrimSequenceName() throws IOException {
+	protected boolean getTrimSequenceName() {
 		return trimSequenceName;
 	}
 

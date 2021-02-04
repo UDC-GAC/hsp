@@ -281,8 +281,7 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 		conf.set(INPUT_DIR, str);
 
 		// Get input splits
-		List<InputSplit> splits = inputFormat.getSplits(job);
-		return splits;
+		return inputFormat.getSplits(job);
 	}
 
 	/**
