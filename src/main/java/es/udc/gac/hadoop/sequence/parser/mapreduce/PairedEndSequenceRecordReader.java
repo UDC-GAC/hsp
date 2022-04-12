@@ -45,7 +45,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Pa
 	private PairText value;
 	private Text left, right;
 
-	public PairedEndSequenceRecordReader(PairedEndCompositeInputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
+	public PairedEndSequenceRecordReader(PairedEndInputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
 
 		// Create left and right record readers
@@ -87,7 +87,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Pa
 
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
-		PairedEndCompositeInputSplit inputSplit = (PairedEndCompositeInputSplit) genericSplit;
+		PairedEndInputSplit inputSplit = (PairedEndInputSplit) genericSplit;
 		leftRR.initialize(inputSplit.get(0), context);
 		rightRR.initialize(inputSplit.get(1), context);
 	}

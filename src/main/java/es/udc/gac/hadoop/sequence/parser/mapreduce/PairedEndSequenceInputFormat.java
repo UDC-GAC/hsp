@@ -193,7 +193,7 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 	public RecordReader<LongWritable, PairText> createRecordReader(InputSplit split, TaskAttemptContext context)
 			throws IOException, InterruptedException {
 
-		return new PairedEndSequenceRecordReader((PairedEndCompositeInputSplit) split, context);
+		return new PairedEndSequenceRecordReader((PairedEndInputSplit) split, context);
 	}
 
 	@Override
@@ -237,20 +237,20 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 			throw new IOException("No file splits have been generated for input path "+leftPath);
 
 		if(rightSplits.size() == 0)
-			throw new IOException("No file splits have been generated for input path "+rightSplits);
+			throw new IOException("No file splits have been generated for input path "+rightPath);
 
 		if(leftSplits.size() != rightSplits.size())
-			throw new IOException("An unexpected different number of file splits have been generated for both input paths");
+			throw new IOException("Number of file splits does not match: "+leftSplits.size()+","+rightSplits.size());
 
 		// Generate composite input splits
 		List<InputSplit> splits = new ArrayList<InputSplit>(leftSplits.size());
 
 		try {
 			for(int i = 0; i<leftSplits.size(); i++) {
-				PairedEndCompositeInputSplit compositeSplit = new PairedEndCompositeInputSplit();
-				compositeSplit.add((FileSplit)leftSplits.get(i));
-				compositeSplit.add((FileSplit)rightSplits.get(i));
-				splits.add(compositeSplit);
+				PairedEndInputSplit pairedSplit = new PairedEndInputSplit();
+				pairedSplit.add((FileSplit)leftSplits.get(i));
+				pairedSplit.add((FileSplit)rightSplits.get(i));
+				splits.add(pairedSplit);
 			}
 		} catch (InterruptedException e) {
 			throw new IOException(e.getMessage());
@@ -273,7 +273,8 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 		Configuration conf = job.getConfiguration();
 
 		// Create a new instance of the input format
-		SingleEndSequenceInputFormat inputFormat = (SingleEndSequenceInputFormat) ReflectionUtils.newInstance(Class.forName(inputFormatClass), conf);
+		SingleEndSequenceInputFormat inputFormat = (SingleEndSequenceInputFormat)
+				ReflectionUtils.newInstance(Class.forName(inputFormatClass), conf);
 
 		// Add input path
 		Path path = inputPath.getFileSystem(conf).makeQualified(inputPath);

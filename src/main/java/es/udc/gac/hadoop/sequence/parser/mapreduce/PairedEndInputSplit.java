@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashSet;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -30,7 +31,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 /**
  * This InputSplit contains two childs FileSplits.
  */
-public class PairedEndCompositeInputSplit extends InputSplit implements Writable {
+public class PairedEndInputSplit extends FileSplit implements Writable {
 
 	private static final int LENGTH = 2;
 
@@ -38,7 +39,7 @@ public class PairedEndCompositeInputSplit extends InputSplit implements Writable
 	private long totsize = 0L;
 	private FileSplit[] splits;
 
-	public PairedEndCompositeInputSplit() {
+	public PairedEndInputSplit() {
 		splits = new FileSplit[LENGTH];
 	}
 
@@ -65,34 +66,68 @@ public class PairedEndCompositeInputSplit extends InputSplit implements Writable
 	}
 
 	/**
+	 * The file containing this split's data.
+	 */
+	@Override
+	public Path getPath() {
+		return splits[0].getPath();
+	}
+
+	/**
+	 * Get the path of ith child FileSplit.
+	 */
+	public Path getPath(int i) {
+		return splits[i].getPath();
+	}
+
+	/**
+	 * The position of the first byte in the file to process.
+	 */
+	@Override
+	public long getStart() {
+		return splits[0].getStart();
+	}
+
+	/**
 	 * Return the aggregate length of all child InputSplits currently added.
 	 */
 	@Override
-	public long getLength() throws IOException {
+	public long getLength() {
 		return totsize;
 	}
 
 	/**
 	 * Get the length of ith child FileSplit.
 	 */
-	public long getLength(int i) throws IOException, InterruptedException {
+	public long getLength(int i) {
 		return splits[i].getLength();
+	}
+
+	@Override
+	public String toString() {
+		return "(" + getPath(0) + "," + getPath(1) + "):" + getStart() + "+" + getLength(0);
 	}
 
 	/**
 	 * Collect a set of hosts from all child FileSplits.
 	 */
 	@Override
-	public String[] getLocations() throws IOException, InterruptedException {
+	public String[] getLocations() throws IOException {
 		HashSet<String> hosts = new HashSet<String>();
-		for (InputSplit s : splits) {
-			String[] hints = s.getLocations();
-			if (hints != null && hints.length > 0) {
-				for (String host : hints) {
-					hosts.add(host);
+
+		try {
+			for (InputSplit s : splits) {
+				String[] hints = s.getLocations();
+				if (hints != null && hints.length > 0) {
+					for (String host : hints) {
+						hosts.add(host);
+					}
 				}
 			}
+		} catch (InterruptedException e) {
+			throw new IOException(e.getMessage());
 		}
+
 		return hosts.toArray(new String[hosts.size()]);
 	}
 

@@ -99,7 +99,6 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 	@Override
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
-
 		org.apache.hadoop.conf.Configuration conf = context.getConfiguration();
 		FileSplit split = (FileSplit) genericSplit;
 		Path file = split.getPath();
