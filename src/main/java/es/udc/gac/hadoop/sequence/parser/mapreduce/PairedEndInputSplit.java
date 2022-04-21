@@ -21,11 +21,13 @@ package es.udc.gac.hadoop.sequence.parser.mapreduce;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 /**
@@ -38,9 +40,15 @@ public class PairedEndInputSplit extends FileSplit implements Writable {
 	private int fill = 0;
 	private long totsize = 0L;
 	private FileSplit[] splits;
+	private List<List<String>> allHosts;
+	private String[] hosts;
 
 	public PairedEndInputSplit() {
 		splits = new FileSplit[LENGTH];
+		allHosts = new ArrayList<List<String>>(LENGTH);
+
+		for (int i = 0; i < LENGTH; i++)
+			allHosts.add(new ArrayList<String>());
 	}
 
 	/**
@@ -49,13 +57,32 @@ public class PairedEndInputSplit extends FileSplit implements Writable {
 	 */
 	public void add(FileSplit s) throws IOException, InterruptedException {
 		if (null == splits) {
-			throw new IOException("Uninitialized FileSplit[]");
+			throw new IOException("Uninitialized PairedEndInputSplit[]");
 		}
 		if (fill == splits.length) {
 			throw new IOException("Too many splits");
 		}
-		splits[fill++] = s;
+
+		splits[fill] = s;
 		totsize += s.getLength();
+
+		String[] hints = s.getLocations();
+
+		if (hints != null && hints.length > 0) {
+			for (String host : hints) {
+				allHosts.get(fill).add(host);
+			}
+		}
+
+		fill++;
+
+		if (fill == LENGTH) {
+			List<String> intersect = allHosts.get(0).stream()
+					.filter(allHosts.get(1)::contains)
+					.collect(Collectors.toList());
+
+			hosts = intersect.toArray(new String[intersect.size()]);
+		}
 	}
 
 	/**
@@ -113,22 +140,22 @@ public class PairedEndInputSplit extends FileSplit implements Writable {
 	 */
 	@Override
 	public String[] getLocations() throws IOException {
-		HashSet<String> hosts = new HashSet<String>();
+		if (hosts.length > 0)
+			return hosts;
 
-		try {
-			for (InputSplit s : splits) {
-				String[] hints = s.getLocations();
-				if (hints != null && hints.length > 0) {
-					for (String host : hints) {
-						hosts.add(host);
-					}
+		HashSet<String> hostsSet = new HashSet<String>();
+
+		for (int i = 0; i < splits.length; i++) {
+			String[] hints = splits[i].getLocations();
+
+			if (hints != null && hints.length > 0) {
+				for (String host : hints) {
+					hostsSet.add(host);
 				}
 			}
-		} catch (InterruptedException e) {
-			throw new IOException(e.getMessage());
 		}
 
-		return hosts.toArray(new String[hosts.size()]);
+		return hostsSet.toArray(new String[hostsSet.size()]);
 	}
 
 	/**
