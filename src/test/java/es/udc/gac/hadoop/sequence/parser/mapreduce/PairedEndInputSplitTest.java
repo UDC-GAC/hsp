@@ -14,7 +14,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class PairedEndInputSplitTest {
@@ -120,7 +119,6 @@ public class PairedEndInputSplitTest {
 	}
 
 	/** The aggregate length is used by frameworks for scheduling, so it must not be lost when the split is shipped. */
-	@Ignore("BUG: readFields() does not restore totsize, so getLength() is 0 after deserialization")
 	@Test
 	public void aggregateLengthSurvivesSerialization() throws Exception {
 		PairedEndInputSplit split = pair(null, null);
@@ -131,5 +129,54 @@ public class PairedEndInputSplitTest {
 		copy.readFields(new DataInputStream(new ByteArrayInputStream(bytes.toByteArray())));
 
 		assertEquals(3000, copy.getLength());
+	}
+
+	private static PairedEndInputSplit roundTrip(PairedEndInputSplit split) throws Exception {
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		split.write(new DataOutputStream(bytes));
+
+		PairedEndInputSplit copy = new PairedEndInputSplit();
+		copy.readFields(new DataInputStream(new ByteArrayInputStream(bytes.toByteArray())));
+		return copy;
+	}
+
+	@Test
+	public void deserializedSplitIsAsCompleteAsTheOriginalOne() throws Exception {
+		PairedEndInputSplit copy = roundTrip(pair(new String[] { "a" }, new String[] { "b" }));
+
+		assertEquals(3000, copy.getLength());
+		assertEquals(LEFT, copy.getPath());
+		assertEquals(100, copy.getStart());
+		assertEquals("(" + LEFT + "," + RIGHT + "):100+1000", copy.toString());
+	}
+
+	@Test
+	public void deserializedSplitHasNoLocationsButIsNotNull() throws Exception {
+		assertArrayEquals(new String[0], roundTrip(pair(new String[] { "a" }, new String[] { "b" })).getLocations());
+	}
+
+	@Test
+	public void deserializedSplitIsFull() throws Exception {
+		PairedEndInputSplit copy = roundTrip(pair(null, null));
+		try {
+			copy.add(new FileSplit(LEFT, 0, 1, null));
+			fail("expected IOException");
+		} catch (IOException expected) {
+			assertEquals("Too many splits", expected.getMessage());
+		}
+	}
+
+	@Test
+	public void splitCanBeReadIntoAnAlreadyUsedInstance() throws Exception {
+		PairedEndInputSplit target = new PairedEndInputSplit();
+		target.add(new FileSplit(LEFT, 0, 5, null));
+		target.add(new FileSplit(RIGHT, 0, 5, null));
+		assertEquals(10, target.getLength());
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		pair(null, null).write(new DataOutputStream(bytes));
+
+		target.readFields(new DataInputStream(new ByteArrayInputStream(bytes.toByteArray())));
+
+		assertEquals(3000, target.getLength());
 	}
 }

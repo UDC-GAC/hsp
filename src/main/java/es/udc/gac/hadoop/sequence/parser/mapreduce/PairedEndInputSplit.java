@@ -180,9 +180,15 @@ public class PairedEndInputSplit extends FileSplit implements Writable {
 			splits = new FileSplit[LENGTH];
 		}
 
+		totsize = 0L;
+
 		for (int i = 0; i < splits.length; ++i) {
 			splits[i] = new FileSplit();
 			splits[i].readFields(in);
+			totsize += splits[i].getLength();
 		}
+
+		fill = LENGTH;
+		hosts = new String[0]; // locations are not serialized
 	}
 }

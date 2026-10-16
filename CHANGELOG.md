@@ -20,6 +20,8 @@ Next release: 2.0.0.
 
 - `PairText.readFields()` throwing `NullPointerException` on an instance created with the no-arg constructor, which is how Hadoop deserializes Writables.
 
+- `PairedEndInputSplit` losing its aggregate length (`getLength()` returned 0) after being deserialized; deserialized splits also return no locations instead of `null`.
+
 ### Changed
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.
