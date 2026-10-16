@@ -37,6 +37,9 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 
 	private static final Logger logger = LogManager.getLogger();
 	private Text newLine;
+	/* The header of the next record is read while finding the end of the current one, so it is kept in newLine for the next call */
+	private boolean pendingHeader;
+	private int pendingHeaderLength;
 
 	public FastARecordReader(TaskAttemptContext context) {
 		super(context);
@@ -57,7 +60,13 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		key.set(pos);
 
 		while (true) {
-			read = readLine(newLine);
+			if (pendingHeader) {
+				read = pendingHeaderLength;
+				pos += read;
+				pendingHeader = false;
+			} else {
+				read = readLine(newLine);
+			}
 
 			logger.trace("start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
@@ -72,8 +81,9 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				logger.trace("starting '>' has been found");
 
 				if (found) {
-					seek(getLineReaderPosition() - read);
 					pos -= read;
+					pendingHeader = true;
+					pendingHeaderLength = (int) read;
 					break;
 				} else {
 					if (getTrimSequenceName()) {

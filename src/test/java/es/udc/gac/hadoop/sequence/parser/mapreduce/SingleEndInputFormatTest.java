@@ -202,7 +202,6 @@ public class SingleEndInputFormatTest {
 		assertEquals(values(expectedFasta(text, true)), values(TestSupport.readAllSplits(FastAInputFormat.class, conf, path, 100)));
 	}
 
-	@Ignore("BUG: LineReader.seek() cannot go back across a buffer refill; compressed streams return short reads so it shows up with small files")
 	@Test
 	public void gzipFastaIsReadInOneSplit() throws Exception {
 		String text = TestSupport.fasta(400, 7, true);
@@ -244,7 +243,6 @@ public class SingleEndInputFormatTest {
 		assertEquals(values(expectedFasta(text, true)), values(TestSupport.readWhole(FastAInputFormat.class, conf, path, bz2.length)));
 	}
 
-	@Ignore("BUG: LineReader.seek() cannot go back across a buffer refill; compressed streams return short reads so it shows up with small files")
 	@Test
 	public void bzip2FastaSingleSplitGivesAllRecords() throws Exception {
 		String text = TestSupport.fasta(400, 10, true);
@@ -266,7 +264,6 @@ public class SingleEndInputFormatTest {
 			assertEquals("split size " + splitSize, expected, values(TestSupport.readAllSplits(FastQInputFormat.class, conf, path, splitSize)));
 	}
 
-	@Ignore("BUG: LineReader.seek() cannot go back across a buffer refill; compressed streams return short reads so it shows up with small files")
 	@Test
 	public void bzip2FastaSplitsOfAnySizeGiveTheSameRecords() throws Exception {
 		String text = TestSupport.fasta(30000, 12, true);

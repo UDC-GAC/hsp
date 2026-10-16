@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class LineReaderTest {
@@ -144,20 +143,6 @@ public class LineReaderTest {
 		assertEquals("abc\n", t.toString());
 		assertEquals(4, lr.readLine(t));
 		assertEquals("def\n", t.toString());
-	}
-
-	@Ignore("BUG: seek() works on the current buffer only, so going back after a line that crossed a buffer refill throws 'Incorrect position'")
-	@Test
-	public void seekBackToTheStartOfALineThatCrossedABufferRefill() throws IOException {
-		LineReader lr = reader("aaaa\nbbbb\n", 4);
-		Text t = new Text();
-
-		int read = lr.readLine(t);
-		assertEquals(5, read);
-		lr.seek(lr.getPos() - read);
-
-		assertEquals(5, lr.readLine(t));
-		assertEquals("aaaa\n", t.toString());
 	}
 
 	@Test

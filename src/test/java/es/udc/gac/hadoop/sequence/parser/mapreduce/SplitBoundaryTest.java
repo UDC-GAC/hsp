@@ -126,6 +126,13 @@ public class SplitBoundaryTest {
 	}
 
 	@Test
+	public void fastaCutAtAnyByteWithSmallInputBuffer() throws Exception {
+		es.udc.gac.hadoop.sequence.parser.util.Configuration.setInputBufferSize(conf, 7);
+		String text = TestSupport.fasta(8, 23, true);
+		assertEveryCutGivesTheSameRecords(FastAInputFormat.class, text, expectedFasta(text, true));
+	}
+
+	@Test
 	public void fastaCutAtAnyByteWithoutTrailingNewline() throws Exception {
 		String text = TestSupport.fasta(15, 21, false);
 		assertEveryCutGivesTheSameRecords(FastAInputFormat.class, text, expectedFasta(text, true));

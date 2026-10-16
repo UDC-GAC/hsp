@@ -11,7 +11,6 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -105,17 +104,24 @@ public class FastARecordReaderTest {
 		assertTrue(read("").isEmpty());
 	}
 
-	/**
-	 * The reader seeks back one line when it finds the header of the next record, which fails when
-	 * that line was read across two buffer refills.
-	 */
-	@Ignore("BUG: LineReader.seek() cannot go back across a buffer refill, so reading fails with 'Incorrect position' when a header straddles the input buffer")
+	/** The header of the next record may be split between two buffer refills at any point. */
 	@Test
 	public void sameRecordsForAnyInputBufferSize() throws Exception {
 		String text = TestSupport.fasta(60, 4, true);
 		List<Record> expected = expectedFasta(text, true);
 
-		for (int bufferSize : new int[] { 100, 128, 200, 500, 4096 }) {
+		for (int bufferSize : new int[] { 1, 2, 3, 5, 7, 16, 100, 128, 200, 500, 4096 }) {
+			es.udc.gac.hadoop.sequence.parser.util.Configuration.setInputBufferSize(conf, bufferSize);
+			assertEquals("buffer size " + bufferSize, expected, read(text));
+		}
+	}
+
+	@Test
+	public void sameRecordsForEveryBufferSizeUpToTheFileSize() throws Exception {
+		String text = TestSupport.fasta(8, 5, false);
+		List<Record> expected = expectedFasta(text, true);
+
+		for (int bufferSize = 1; bufferSize <= text.length() + 1; bufferSize++) {
 			es.udc.gac.hadoop.sequence.parser.util.Configuration.setInputBufferSize(conf, bufferSize);
 			assertEquals("buffer size " + bufferSize, expected, read(text));
 		}
