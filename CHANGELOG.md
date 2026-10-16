@@ -22,6 +22,8 @@ Next release: 2.0.0.
 
 - `PairedEndInputSplit` losing its aggregate length (`getLength()` returned 0) after being deserialized; deserialized splits also return no locations instead of `null`.
 
+- `PairedEndSequenceInputFormat.getSplits()` failing with `IllegalArgumentException` (empty path) instead of an `IOException` when the input paths or formats of a job have not been set.
+
 ### Changed
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.

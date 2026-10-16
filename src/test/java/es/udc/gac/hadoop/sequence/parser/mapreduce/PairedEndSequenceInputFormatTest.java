@@ -249,15 +249,28 @@ public class PairedEndSequenceInputFormatTest {
 		assertIOException("does.not.Exist", () -> new PairedEndSequenceInputFormat().getSplits(Job.getInstance(conf)));
 	}
 
-	@Ignore("BUG: an unconfigured job fails with IllegalArgumentException (empty Path) instead of the IOException of the explicit checks")
 	@Test
 	public void unconfiguredJobIsReportedAsIOException() throws Exception {
-		try {
-			new PairedEndSequenceInputFormat().getSplits(Job.getInstance(conf));
-			fail("expected IOException");
-		} catch (IOException expected) {
-			// ok
-		}
+		assertIOException("No input paths specified in job", () -> new PairedEndSequenceInputFormat().getSplits(Job.getInstance(conf)));
+	}
+
+	@Test
+	public void jobWithOnlyOneInputPathIsReportedAsIOException() throws Exception {
+		Path left = TestSupport.write(tmp.getRoot(), "l.fq", "@a\nA\n+\nI\n");
+		PairedEndSequenceInputFormat.setLeftInputPath(conf, left, FastQInputFormat.class);
+
+		assertIOException("No input paths specified in job", () -> new PairedEndSequenceInputFormat().getSplits(Job.getInstance(conf)));
+	}
+
+	@Test
+	public void jobWithoutInputFormatsIsReportedAsIOException() throws Exception {
+		Path left = TestSupport.write(tmp.getRoot(), "l.fq", "@a\nA\n+\nI\n");
+		Path right = TestSupport.write(tmp.getRoot(), "r.fq", "@a\nT\n+\nI\n");
+		configure(left, right, FastQInputFormat.class);
+		conf.unset(PairedEndSequenceInputFormat.LEFT_INPUT_FORMAT);
+		conf.unset(PairedEndSequenceInputFormat.RIGHT_INPUT_FORMAT);
+
+		assertIOException("No input formats specified in job", () -> new PairedEndSequenceInputFormat().getSplits(Job.getInstance(conf)));
 	}
 
 	// ---------------------------------------------------------------------

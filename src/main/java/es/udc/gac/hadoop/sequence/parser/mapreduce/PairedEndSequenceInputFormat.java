@@ -199,17 +199,19 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 	@Override
 	public List<InputSplit> getSplits(JobContext job) throws IOException {
 
-		// Get input paths
-		Path[] inputPaths = getInputPaths(job);
+		Configuration conf = job.getConfiguration();
 
-		if (inputPaths.length == 0)
+		// Get input paths
+		if (conf.get(LEFT_INPUT_PATH, "").isEmpty() || conf.get(RIGHT_INPUT_PATH, "").isEmpty())
 			throw new IOException("No input paths specified in job");
 
-		// Get input formats
-		String[] inputFormats = getInputFormats(job);
+		Path[] inputPaths = getInputPaths(job);
 
-		if (inputFormats.length == 0)
+		// Get input formats
+		if (conf.get(LEFT_INPUT_FORMAT, "").isEmpty() || conf.get(RIGHT_INPUT_FORMAT, "").isEmpty())
 			throw new IOException("No input formats specified in job");
+
+		String[] inputFormats = getInputFormats(job);
 
 		Path leftPath = inputPaths[0];
 		Path rightPath = inputPaths[1];
