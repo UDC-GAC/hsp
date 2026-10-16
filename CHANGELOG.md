@@ -24,6 +24,8 @@ Next release: 2.0.0.
 
 - `PairedEndSequenceInputFormat.getSplits()` failing with `IllegalArgumentException` (empty path) instead of an `IOException` when the input paths or formats of a job have not been set.
 
+- The key of the first record of an uncompressed split that starts in the middle of another record was the position where the reader started scanning, not the byte offset of the record as documented. It is now the offset of the record, so keys no longer depend on where the splits are cut. This also fixes spurious "Unexpected different keys" errors in paired-end datasets whose files differ in the length of the discarded lines.
+
 ### Changed
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.

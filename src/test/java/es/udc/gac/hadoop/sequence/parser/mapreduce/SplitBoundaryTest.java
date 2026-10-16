@@ -11,7 +11,6 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -35,13 +34,6 @@ public class SplitBoundaryTest {
 		conf = TestSupport.newConf();
 	}
 
-	private static List<String> values(List<Record> records) {
-		List<String> values = new ArrayList<>();
-		for (Record r : records)
-			values.add(r.value);
-		return values;
-	}
-
 	private List<Record> readCuts(Class<? extends SingleEndSequenceInputFormat> format, Path path, long length, long... cuts) throws Exception {
 		List<Record> records = new ArrayList<>();
 		long start = 0;
@@ -58,7 +50,7 @@ public class SplitBoundaryTest {
 		Path path = TestSupport.write(tmp.getRoot(), "cut", bytes);
 
 		for (int cut = 1; cut < bytes.length; cut++)
-			assertEquals("file cut at byte " + cut, values(expected), values(readCuts(format, path, bytes.length, cut)));
+			assertEquals("file cut at byte " + cut, expected, readCuts(format, path, bytes.length, cut));
 	}
 
 	private static long longestRecord(List<Record> records, long fileLength) {
@@ -76,7 +68,7 @@ public class SplitBoundaryTest {
 
 		for (int c1 = 1; c1 < bytes.length; c1++)
 			for (int c2 = (int) (c1 + minMiddleLength); c2 < bytes.length; c2++)
-				assertEquals("file cut at bytes " + c1 + " and " + c2, values(expected), values(readCuts(format, path, bytes.length, c1, c2)));
+				assertEquals("file cut at bytes " + c1 + " and " + c2, expected, readCuts(format, path, bytes.length, c1, c2));
 	}
 
 	@Test
@@ -164,7 +156,7 @@ public class SplitBoundaryTest {
 			int k = 0;
 			for (long c : set)
 				cuts[k++] = c;
-			assertEquals("file cut at " + java.util.Arrays.toString(cuts), values(expected), values(readCuts(format, path, bytes.length, cuts)));
+			assertEquals("file cut at " + java.util.Arrays.toString(cuts), expected, readCuts(format, path, bytes.length, cuts));
 		}
 	}
 
@@ -195,19 +187,34 @@ public class SplitBoundaryTest {
 	}
 
 	/**
-	 * The key is documented as the byte offset of the record in the file. It is only that for the
-	 * records after the first one of a split: the first one gets the position where the reader
-	 * started scanning, before discarding the partial record at the split start.
+	 * The key is the byte offset of the record in the file, also for the first record of a split that
+	 * starts in the middle of another record.
 	 */
-	@Ignore("BUG: the key of the first record of a split that starts mid-record is not the offset of that record")
 	@Test
 	public void keysAreTheOffsetsOfTheRecordsWhateverTheSplitStart() throws Exception {
 		String text = TestSupport.fastq(15, 30, true);
-		List<Record> expected = expectedFastq(text, true);
 		byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
 		Path path = TestSupport.write(tmp.getRoot(), "keys", bytes);
+		List<Record> expected = expectedFastq(text, true);
 
-		for (int cut = 1; cut < bytes.length; cut++)
-			assertEquals("file cut at byte " + cut, expected, readCuts(FastQInputFormat.class, path, bytes.length, cut));
+		for (int cut = 1; cut < bytes.length; cut++) {
+			List<Record> second = TestSupport.readSplit(FastQInputFormat.class, conf, path, cut, bytes.length - cut);
+			if (!second.isEmpty())
+				assertEquals("first record of the split starting at byte " + cut, expected.get(expected.size() - second.size()).key, second.get(0).key);
+		}
+	}
+
+	@Test
+	public void keysAreTheOffsetsOfTheFastaRecordsWhateverTheSplitStart() throws Exception {
+		String text = TestSupport.fasta(15, 31, true);
+		byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+		Path path = TestSupport.write(tmp.getRoot(), "keys", bytes);
+		List<Record> expected = expectedFasta(text, true);
+
+		for (int cut = 1; cut < bytes.length; cut++) {
+			List<Record> second = TestSupport.readSplit(FastAInputFormat.class, conf, path, cut, bytes.length - cut);
+			if (!second.isEmpty())
+				assertEquals("first record of the split starting at byte " + cut, expected.get(expected.size() - second.size()).key, second.get(0).key);
+		}
 	}
 }

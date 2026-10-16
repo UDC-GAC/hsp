@@ -129,7 +129,7 @@ public class SingleEndInputFormatTest {
 		Path path = TestSupport.write(tmp.getRoot(), "reads.fq", text);
 
 		for (long splitSize : new long[] { 200, 333, 1000, 4096, 12345, length / 2, length, 2 * length })
-			assertEquals("split size " + splitSize, values(expected), values(TestSupport.readAllSplits(FastQInputFormat.class, conf, path, splitSize)));
+			assertEquals("split size " + splitSize, expected, TestSupport.readAllSplits(FastQInputFormat.class, conf, path, splitSize));
 	}
 
 	@Test
@@ -140,7 +140,7 @@ public class SingleEndInputFormatTest {
 		Path path = TestSupport.write(tmp.getRoot(), "reads.fa", text);
 
 		for (long splitSize : new long[] { 1000, 4096, 12345, length / 2, length, 2 * length })
-			assertEquals("split size " + splitSize, values(expected), values(TestSupport.readAllSplits(FastAInputFormat.class, conf, path, splitSize)));
+			assertEquals("split size " + splitSize, expected, TestSupport.readAllSplits(FastAInputFormat.class, conf, path, splitSize));
 	}
 
 	@Test
@@ -149,7 +149,7 @@ public class SingleEndInputFormatTest {
 		Path path = TestSupport.write(tmp.getRoot(), "reads.fq", text);
 
 		for (long splitSize : new long[] { 1, 7, 50, 100, 200 })
-			assertEquals("split size " + splitSize, values(expectedFastq(text, true)), values(TestSupport.readAllSplits(FastQInputFormat.class, conf, path, splitSize)));
+			assertEquals("split size " + splitSize, expectedFastq(text, true), TestSupport.readAllSplits(FastQInputFormat.class, conf, path, splitSize));
 	}
 
 	@Test
@@ -158,7 +158,7 @@ public class SingleEndInputFormatTest {
 		Path path = TestSupport.write(tmp.getRoot(), "reads.fa", text);
 
 		for (long splitSize : new long[] { 1, 7, 50, 200, 333 })
-			assertEquals("split size " + splitSize, values(expectedFasta(text, true)), values(TestSupport.readAllSplits(FastAInputFormat.class, conf, path, splitSize)));
+			assertEquals("split size " + splitSize, expectedFasta(text, true), TestSupport.readAllSplits(FastAInputFormat.class, conf, path, splitSize));
 	}
 
 	@Test
@@ -173,7 +173,7 @@ public class SingleEndInputFormatTest {
 		List<Record> all = new ArrayList<>(TestSupport.readSplit(FastQInputFormat.class, conf, path, 0, lastKey + 3));
 		all.addAll(TestSupport.readSplit(FastQInputFormat.class, conf, path, lastKey + 3, length - lastKey - 3));
 
-		assertEquals(values(expected), values(all));
+		assertEquals(expected, all);
 	}
 
 	@Test

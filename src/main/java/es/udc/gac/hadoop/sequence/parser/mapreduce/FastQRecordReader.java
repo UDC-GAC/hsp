@@ -60,8 +60,6 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		if (isSplitFinished())
 			return false;
 
-		key.set(pos);
-
 		while (true) {
 			firstRead = readLine(newLine);
 			i++;
@@ -86,7 +84,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 					return false;
 
 				if (temp.getBytes()[0] != '@') {
-					if (firstHeader && startsAfterSplit(pos - firstRead - secondRead))
+					if (firstHeader && !startRecord(pos - firstRead - secondRead))
 						return false;
 
 					i = 2;
@@ -96,7 +94,7 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 					}
 					newLine.append(temp.getBytes(), 0, temp.getLength());
 				} else {
-					if (firstHeader && startsAfterSplit(pos - secondRead))
+					if (firstHeader && !startRecord(pos - secondRead))
 						return false;
 
 					i = 1;

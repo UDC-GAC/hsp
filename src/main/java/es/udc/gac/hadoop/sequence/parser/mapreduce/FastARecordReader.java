@@ -57,8 +57,6 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		if (isSplitFinished())
 			return false;
 
-		key.set(pos);
-
 		while (true) {
 			if (pendingHeader) {
 				read = pendingHeaderLength;
@@ -86,7 +84,7 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 					pendingHeaderLength = (int) read;
 					break;
 				} else {
-					if (startsAfterSplit(pos - read))
+					if (!startRecord(pos - read))
 						return false;
 
 					if (getTrimSequenceName()) {

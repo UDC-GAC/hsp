@@ -328,11 +328,13 @@ public class PairedEndSequenceInputFormatTest {
 		configure(TestSupport.write(tmp.getRoot(), "l.fq", leftText), TestSupport.write(tmp.getRoot(), "r.fq", rightText), FastQInputFormat.class);
 		List<Record> expected = TestSupport.expectedFastq(leftText, true);
 
-		List<PairRecord> actual = TestSupport.readAllPairedSplits(conf, 10_000_000);
+		for (long splitSize : new long[] { 10_000_000, 1000, 77 }) {
+			List<PairRecord> actual = TestSupport.readAllPairedSplits(conf, splitSize);
 
-		assertEquals(expected.size(), actual.size());
-		for (int i = 0; i < actual.size(); i++)
-			assertEquals(expected.get(i).key, actual.get(i).key);
+			assertEquals(expected.size(), actual.size());
+			for (int i = 0; i < actual.size(); i++)
+				assertEquals("split size " + splitSize, expected.get(i).key, actual.get(i).key);
+		}
 	}
 
 	@Test
