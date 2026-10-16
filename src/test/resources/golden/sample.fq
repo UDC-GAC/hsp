@@ -1,0 +1,16 @@
+@read1 1:N:0:ATCACG extra comment
+GATTACAGATTACA
++read1 1:N:0:ATCACG extra comment
+IIIIHHHHGGGGFF
+@read2
+ACGTN
++
+@@@@#
+@read3 x
+TT
++read3
+@I
+@read4 y z
+GGGCC
++
+IIII@

@@ -1,0 +1,9 @@
+>seq1 Homo sapiens chr1
+ACGTACGTAC
+GTACGTACGT
+AC
+>seq2
+TTTT
+>seq3 empty
+>seq4 x y
+GGGGCCCC
