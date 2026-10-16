@@ -221,6 +221,14 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		return false;
 	}
 
+	/**
+	 * A record starting after the end of an uncompressed split belongs to the following split, which
+	 * skips the partial record at its start. Positions of compressed splits are not comparable.
+	 */
+	protected boolean startsAfterSplit(long recordStart) {
+		return !isCompressedInput && recordStart > end;
+	}
+
 	protected long getSplitPosition() throws IOException {
 		if (!isCompressedInput) {
 			return pos;

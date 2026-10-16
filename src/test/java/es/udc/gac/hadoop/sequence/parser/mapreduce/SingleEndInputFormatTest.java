@@ -20,7 +20,6 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -144,13 +143,21 @@ public class SingleEndInputFormatTest {
 			assertEquals("split size " + splitSize, values(expected), values(TestSupport.readAllSplits(FastAInputFormat.class, conf, path, splitSize)));
 	}
 
-	@Ignore("BUG: records are duplicated when a split is shorter than a record (the next split rescans the same record)")
+	@Test
+	public void fastqSplitsShorterThanARecordGiveTheSameRecords() throws Exception {
+		String text = TestSupport.fastq(400, 3, true);
+		Path path = TestSupport.write(tmp.getRoot(), "reads.fq", text);
+
+		for (long splitSize : new long[] { 1, 7, 50, 100, 200 })
+			assertEquals("split size " + splitSize, values(expectedFastq(text, true)), values(TestSupport.readAllSplits(FastQInputFormat.class, conf, path, splitSize)));
+	}
+
 	@Test
 	public void fastaSplitsShorterThanARecordGiveTheSameRecords() throws Exception {
 		String text = TestSupport.fasta(400, 4, true);
 		Path path = TestSupport.write(tmp.getRoot(), "reads.fa", text);
 
-		for (long splitSize : new long[] { 50, 200, 333 })
+		for (long splitSize : new long[] { 1, 7, 50, 200, 333 })
 			assertEquals("split size " + splitSize, values(expectedFasta(text, true)), values(TestSupport.readAllSplits(FastAInputFormat.class, conf, path, splitSize)));
 	}
 

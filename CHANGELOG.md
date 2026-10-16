@@ -16,6 +16,8 @@ Next release: 2.0.0.
 ### Fixed
 - FASTA reader failing with `IOException: Incorrect position` when the header of a record crossed a refill of the input buffer, which happened with any non-trivial file (plain, gzip or bzip2). The reader no longer seeks back in the line reader: it keeps the header it has already read for the next record.
 
+- Duplicated records when an uncompressed split was shorter than a record (e.g. FASTA with sequences longer than the split size). A record starting after the end of a split now belongs to the following split.
+
 ### Changed
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.

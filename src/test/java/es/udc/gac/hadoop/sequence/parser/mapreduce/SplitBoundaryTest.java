@@ -112,7 +112,6 @@ public class SplitBoundaryTest {
 		assertEveryPairOfCutsGivesTheSameRecords(FastQInputFormat.class, text, expected, longestRecord(expected, text.length()));
 	}
 
-	@Ignore("BUG: records are duplicated when a split is shorter than a record (the next split rescans the same record)")
 	@Test
 	public void fastqCutAtAnyTwoBytes() throws Exception {
 		String text = TestSupport.fastq(4, 14, true);
@@ -145,11 +144,54 @@ public class SplitBoundaryTest {
 		assertEveryPairOfCutsGivesTheSameRecords(FastAInputFormat.class, text, expected, longestRecord(expected, text.length()));
 	}
 
-	@Ignore("BUG: records are duplicated when a split is shorter than a record (the next split rescans the same record)")
 	@Test
 	public void fastaCutAtAnyTwoBytes() throws Exception {
 		String text = TestSupport.fasta(4, 22, true);
 		assertEveryPairOfCutsGivesTheSameRecords(FastAInputFormat.class, text, expectedFasta(text, true), 1);
+	}
+
+	private void assertRandomCutsGiveTheSameRecords(Class<? extends SingleEndSequenceInputFormat> format, String text, List<Record> expected, long seed) throws Exception {
+		byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+		Path path = TestSupport.write(tmp.getRoot(), "random", bytes);
+		java.util.Random rnd = new java.util.Random(seed);
+
+		for (int round = 0; round < 1500; round++) {
+			java.util.TreeSet<Long> set = new java.util.TreeSet<>();
+			int numCuts = 1 + rnd.nextInt(12);
+			for (int c = 0; c < numCuts; c++)
+				set.add(1L + rnd.nextInt(bytes.length - 1));
+			long[] cuts = new long[set.size()];
+			int k = 0;
+			for (long c : set)
+				cuts[k++] = c;
+			assertEquals("file cut at " + java.util.Arrays.toString(cuts), values(expected), values(readCuts(format, path, bytes.length, cuts)));
+		}
+	}
+
+	@Test
+	public void fastqRandomCuts() throws Exception {
+		String text = TestSupport.fastq(40, 40, true);
+		assertRandomCutsGiveTheSameRecords(FastQInputFormat.class, text, expectedFastq(text, true), 1);
+	}
+
+	@Test
+	public void fastqRandomCutsWithSmallInputBuffer() throws Exception {
+		es.udc.gac.hadoop.sequence.parser.util.Configuration.setInputBufferSize(conf, 5);
+		String text = TestSupport.fastq(40, 41, false);
+		assertRandomCutsGiveTheSameRecords(FastQInputFormat.class, text, expectedFastq(text, true), 2);
+	}
+
+	@Test
+	public void fastaRandomCuts() throws Exception {
+		String text = TestSupport.fasta(40, 42, true);
+		assertRandomCutsGiveTheSameRecords(FastAInputFormat.class, text, expectedFasta(text, true), 3);
+	}
+
+	@Test
+	public void fastaRandomCutsWithSmallInputBuffer() throws Exception {
+		es.udc.gac.hadoop.sequence.parser.util.Configuration.setInputBufferSize(conf, 5);
+		String text = TestSupport.fasta(40, 43, false);
+		assertRandomCutsGiveTheSameRecords(FastAInputFormat.class, text, expectedFasta(text, true), 4);
 	}
 
 	/**

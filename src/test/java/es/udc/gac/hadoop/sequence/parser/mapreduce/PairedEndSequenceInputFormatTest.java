@@ -295,6 +295,20 @@ public class PairedEndSequenceInputFormatTest {
 	}
 
 	@Test
+	public void pairsAreReadInLockstepWithSplitsShorterThanARecord() throws Exception {
+		String leftText = TestSupport.fastq(120, 7, true);
+		String rightText = mateOfFastq(leftText);
+		configure(TestSupport.write(tmp.getRoot(), "l.fq", leftText), TestSupport.write(tmp.getRoot(), "r.fq", rightText), FastQInputFormat.class);
+		List<PairRecord> expected = zip(TestSupport.expectedFastq(leftText, true), TestSupport.expectedFastq(rightText, true));
+
+		for (long splitSize : new long[] { 7, 20, 50, 77 }) {
+			List<PairRecord> actual = TestSupport.readAllPairedSplits(conf, splitSize);
+			assertEquals("split size " + splitSize, leftValues(expected), leftValues(actual));
+			assertEquals("split size " + splitSize, rightValues(expected), rightValues(actual));
+		}
+	}
+
+	@Test
 	public void keyIsTheOffsetOfTheRecordInBothFiles() throws Exception {
 		String leftText = TestSupport.fastq(50, 3, true);
 		String rightText = mateOfFastq(leftText);

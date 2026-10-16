@@ -86,6 +86,9 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 					pendingHeaderLength = (int) read;
 					break;
 				} else {
+					if (startsAfterSplit(pos - read))
+						return false;
+
 					if (getTrimSequenceName()) {
 						//Trim spaces in sequence name
 						LineReader.trim(newLine, 1);
