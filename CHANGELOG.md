@@ -18,6 +18,8 @@ Next release: 2.0.0.
 
 - Duplicated records when an uncompressed split was shorter than a record (e.g. FASTA with sequences longer than the split size). A record starting after the end of a split now belongs to the following split.
 
+- `PairText.readFields()` throwing `NullPointerException` on an instance created with the no-arg constructor, which is how Hadoop deserializes Writables.
+
 ### Changed
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.

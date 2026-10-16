@@ -69,6 +69,12 @@ public class PairText implements Writable {
 
 	@Override
 	public void readFields(DataInput in) throws IOException {
+		/* Hadoop creates Writables with the no-arg constructor before calling readFields() */
+		if (left == null)
+			left = new Text();
+		if (right == null)
+			right = new Text();
+
 		left.readFields(in);
 		right.readFields(in);
 	}

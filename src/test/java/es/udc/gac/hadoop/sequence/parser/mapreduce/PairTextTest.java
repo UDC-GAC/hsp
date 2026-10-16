@@ -13,7 +13,6 @@ import java.io.IOException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class PairTextTest {
@@ -69,13 +68,40 @@ public class PairTextTest {
 	 * Hadoop deserializes Writables by instantiating them through the no-arg constructor
 	 * and calling readFields(), so a PairText must survive that.
 	 */
-	@Ignore("BUG: PairText() leaves left/right null so readFields() throws NullPointerException")
 	@Test
 	public void canBeDeserializedThroughNoArgConstructor() throws IOException {
 		byte[] bytes = serialize(new PairText(new Text("left"), new Text("right")));
 
 		PairText copy = ReflectionUtils.newInstance(PairText.class, null);
 		copy.readFields(new DataInputStream(new ByteArrayInputStream(bytes)));
+
+		assertEquals(new Text("left"), copy.getLeft());
+		assertEquals(new Text("right"), copy.getRight());
+	}
+
+	@Test
+	public void deserializedPairCanBeReusedForTheNextRecord() throws IOException {
+		PairText pair = new PairText();
+		pair.readFields(new DataInputStream(new ByteArrayInputStream(serialize(new PairText(new Text("l1"), new Text("r1"))))));
+		pair.readFields(new DataInputStream(new ByteArrayInputStream(serialize(new PairText(new Text("l2"), new Text("r2"))))));
+
+		assertEquals(new Text("l2"), pair.getLeft());
+		assertEquals(new Text("r2"), pair.getRight());
+	}
+
+	@Test
+	public void roundTripsThroughHadoopSerializationFramework() throws IOException {
+		org.apache.hadoop.io.serializer.SerializationFactory factory = new org.apache.hadoop.io.serializer.SerializationFactory(new org.apache.hadoop.conf.Configuration(false));
+		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+		org.apache.hadoop.io.serializer.Serializer<PairText> serializer = factory.getSerializer(PairText.class);
+		serializer.open(bytes);
+		serializer.serialize(new PairText(new Text("left"), new Text("right")));
+		serializer.close();
+
+		org.apache.hadoop.io.serializer.Deserializer<PairText> deserializer = factory.getDeserializer(PairText.class);
+		deserializer.open(new ByteArrayInputStream(bytes.toByteArray()));
+		PairText copy = deserializer.deserialize(null);
+		deserializer.close();
 
 		assertEquals(new Text("left"), copy.getLeft());
 		assertEquals(new Text("right"), copy.getRight());
