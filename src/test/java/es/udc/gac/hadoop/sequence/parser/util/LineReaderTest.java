@@ -94,6 +94,41 @@ public class LineReaderTest {
 	}
 
 	@Test
+	public void sameLinesAsASimpleSplitterOnRandomBytes() throws IOException {
+		// bytes next to LF in value or bit pattern, to catch a faulty word-at-a-time search
+		byte[] alphabet = { '\n', '\n', 0x0B, 0x09, (byte) 0x8A, 0x1A, 0x00, (byte) 0xFF, 'A', ' ' };
+		java.util.Random rnd = new java.util.Random(42);
+
+		for (int round = 0; round < 200; round++) {
+			byte[] data = new byte[rnd.nextInt(300)];
+			for (int i = 0; i < data.length; i++)
+				data[i] = alphabet[rnd.nextInt(alphabet.length)];
+
+			List<byte[]> expected = new ArrayList<>();
+			int from = 0;
+			for (int i = 0; i < data.length; i++) {
+				if (data[i] == '\n') {
+					expected.add(java.util.Arrays.copyOfRange(data, from, i + 1));
+					from = i + 1;
+				}
+			}
+			if (from < data.length)
+				expected.add(java.util.Arrays.copyOfRange(data, from, data.length));
+
+			for (int bufferSize : new int[] { 1, 3, 7, 8, 9, 15, 16, 17, 64, 1000 }) {
+				LineReader lr = new LineReader(new ByteArrayInputStream(data), bufferSize);
+				Text t = new Text();
+				for (int i = 0; i < expected.size(); i++) {
+					String msg = "round " + round + ", buffer size " + bufferSize + ", line " + i;
+					assertEquals(msg, expected.get(i).length, lr.readLine(t));
+					assertEquals(msg, new Text(expected.get(i)), t);
+				}
+				assertEquals(0, lr.readLine(t));
+			}
+		}
+	}
+
+	@Test
 	public void lineLongerThanBufferIsReadWhole() throws IOException {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 1000; i++)

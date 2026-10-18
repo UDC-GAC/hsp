@@ -21,6 +21,9 @@ package es.udc.gac.hadoop.sequence.parser.util;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+import java.nio.ByteOrder;
 
 import org.apache.hadoop.io.Text;
 
@@ -39,6 +42,10 @@ public class LineReader implements Closeable {
 	 */
 	public static final Text LF = new Text("\n");
 	private static final byte LF_BYTE = '\n';
+	private static final VarHandle WORD = MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.LITTLE_ENDIAN);
+	private static final long LF_WORD = 0x0A0A0A0A0A0A0A0AL;
+	private static final long LOW_BITS = 0x0101010101010101L;
+	private static final long HIGH_BITS = 0x8080808080808080L;
 
 	private InputStream inputStream;
 	private byte[] buffer;
@@ -112,14 +119,33 @@ public class LineReader implements Closeable {
 				}
 			}
 
-			for (; bufferPos < bufferLength; ++bufferPos) { //search for newline
-				if (buffer[bufferPos] == LF_BYTE) {
+			final byte[] buf = buffer;
+			final int length = bufferLength;
+			int p = bufferPos;
+
+			for (; p + Long.BYTES <= length; p += Long.BYTES) { //search for newline, a word at a time
+				long w = (long) WORD.get(buf, p) ^ LF_WORD;
+				long lf = (w - LOW_BITS) & ~w & HIGH_BITS; // 0x80 in the first byte that was LF
+				if (lf != 0) {
+					p += Long.numberOfTrailingZeros(lf) >>> 3;
 					newLine = true;
-					++bufferPos; // at next invocation proceed from following byte
 					break;
 				}
 			}
 
+			if (!newLine) {
+				for (; p < length; ++p) {
+					if (buf[p] == LF_BYTE) {
+						newLine = true;
+						break;
+					}
+				}
+			}
+
+			if (newLine)
+				++p; // at next invocation proceed from following byte
+
+			bufferPos = p;
 			readLength = bufferPos - startPos;
 			bytesConsumed += readLength;
 			str.append(buffer, startPos, readLength);
