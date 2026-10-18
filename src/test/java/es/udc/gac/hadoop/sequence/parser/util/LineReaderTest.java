@@ -183,4 +183,20 @@ public class LineReaderTest {
 		LineReader.trim(t, 2);
 		assertEquals("@ ab\n", t.toString());
 	}
+
+	@Test
+	public void trimIgnoresSpacesPastTheLengthOfTheText() {
+		// the backing array of a reused Text keeps the bytes of previous, longer lines
+		Text t = new Text("@read1 comment here\n");
+		t.set("@r\n".getBytes(), 0, 3);
+		LineReader.trim(t, 2);
+		assertEquals("@r\n", t.toString());
+	}
+
+	@Test
+	public void trimWithStartBeyondTheLengthLeavesTextUntouched() {
+		Text t = new Text("@");
+		LineReader.trim(t, 2);
+		assertEquals("@", t.toString());
+	}
 }

@@ -49,6 +49,14 @@ public class FastQRecordReaderTest {
 	}
 
 	@Test
+	public void lastLineWithOnlyAnAtSignAfterAHeaderIsAnIncompleteRecord() throws Exception {
+		// the reader looks one line ahead of a header and that line is shorter than the position where the name is trimmed
+		List<Record> records = read("@a\nA\n+\nI\n@b\n@");
+
+		assertEquals(Arrays.asList(new Record(0, "@a\nA\n+\nI\n")), records);
+	}
+
+	@Test
 	public void nameIsKeptWhenTrimmingIsDisabled() throws Exception {
 		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, false);
 

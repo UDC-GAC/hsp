@@ -138,11 +138,15 @@ public class LineReader implements Closeable {
 	 * @param start Starting byte position
 	 */
 	public static void trim(Text text, int start) {
-		int pos = text.find(" ", start);
+		byte[] bytes = text.getBytes();
+		int length = text.getLength();
 
-		if (pos != -1) {
-			text.getBytes()[pos] = LF_BYTE;
-			text.set(text.getBytes(), 0, ++pos);
+		for (int pos = start; pos < length; pos++) {
+			if (bytes[pos] == ' ') {
+				bytes[pos] = LF_BYTE;
+				text.set(bytes, 0, pos + 1);
+				return;
+			}
 		}
 	}
 }

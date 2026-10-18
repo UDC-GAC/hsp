@@ -15,6 +15,8 @@ Next release: 2.0.0.
 - `coverage` Maven profile (JaCoCo): `mvn test -Pcoverage`.
 
 ### Fixed
+- FASTQ reader failing with `IllegalArgumentException: newPosition > limit` on a file whose last line is a lone `@` without a line feed after a header. The incomplete record is now ignored with the usual warning, like any other truncated record.
+
 - FASTA reader failing with `IOException: Incorrect position` when the header of a record crossed a refill of the input buffer, which happened with any non-trivial file (plain, gzip or bzip2). The reader no longer seeks back in the line reader: it keeps the header it has already read for the next record.
 
 - Duplicated records when an uncompressed split was shorter than a record (e.g. FASTA with sequences longer than the split size). A record starting after the end of a split now belongs to the following split.
@@ -29,6 +31,7 @@ Next release: 2.0.0.
 
 ### Changed
 - Logging reworked. HSP now depends only on the SLF4J API (`provided`: Hadoop, Spark and Flink already ship it) and no longer bundles Log4j2 nor its `log4j2.xml`, so the logging backend, format and levels are the ones of your application or engine (logger `es.udc.gac.hadoop.sequence.parser`). The `[HSP]` lines that HSP used to print to the standard output are gone.
+- Cutting the read name at the first space no longer allocates memory per record (48 B with the help of the JIT, 216 B without it, twice per pair in paired-end).
 - The record readers no longer log anything per record or per line (9 `trace` calls removed from `nextKeyValue()`: 5 in FASTQ and 4 in FASTA, one of them evaluated for every line). Even with the level disabled they built their arguments in the hot path, which cost up to 144 B of allocation per record in FASTQ and 360 B in FASTA (when the JIT does not eliminate it); it is now zero. Each split is described with two `DEBUG` messages (opened, closed) instead of an `INFO` one per split.
 - Error messages of the paired-end classes now name the files and offsets involved (different keys or lengths, one file with more records, different number of splits), and `IOException`s wrapping another exception keep it as their cause.
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.

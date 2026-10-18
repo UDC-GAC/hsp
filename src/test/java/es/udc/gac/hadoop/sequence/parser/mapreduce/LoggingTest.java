@@ -171,4 +171,12 @@ public class LoggingTest {
 		assertEquals(warnings.toString(), 1, warnings.size());
 		assertTrue(warnings.get(0), warnings.get(0).contains("record starting at offset 9 "));
 	}
+
+	@Test
+	public void fastqFileEndingInALoneAtSignIsReported() throws Exception {
+		List<String> warnings = warningsReading("@a\nA\n+\nI\n@b\n@");
+
+		assertEquals(warnings.toString(), 1, warnings.size());
+		assertTrue(warnings.get(0), warnings.get(0).contains("record starting at offset 12 "));
+	}
 }
