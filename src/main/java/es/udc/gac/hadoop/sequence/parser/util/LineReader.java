@@ -145,6 +145,52 @@ public class LineReader implements Closeable {
 		return buffer[bufferPos] & 0xFF;
 	}
 
+	/**
+	 * Append the next two lines to the given Text, as two calls to appendLine() would, if both are complete
+	 * in the buffer and the second one does not start with the given byte; otherwise nothing is consumed
+	 * and 0 is returned.
+	 *
+	 * @param str the object to append the lines to (including LF)
+	 * @param notFirstByte the byte the second line must not start with
+	 *
+	 * @return the number of bytes read (including LF), or 0 if nothing was read
+	 */
+	public int appendTwoLines(Text str, int notFirstByte) {
+		final int start = bufferPos;
+		final int first = indexOfLF(buffer, start, bufferLength);
+
+		if (first < 0 || first + 1 >= bufferLength || (buffer[first + 1] & 0xFF) == notFirstByte)
+			return 0;
+
+		final int second = indexOfLF(buffer, first + 1, bufferLength);
+
+		if (second < 0)
+			return 0;
+
+		bufferPos = second + 1;
+		str.append(buffer, start, bufferPos - start);
+		return bufferPos - start;
+	}
+
+	/** Index of the first LF in buf[from, to), or -1. */
+	private static int indexOfLF(byte[] buf, int from, int to) {
+		int p = from;
+
+		for (; p + Long.BYTES <= to; p += Long.BYTES) { // a word at a time
+			long w = (long) WORD.get(buf, p) ^ LF_WORD;
+			long lf = (w - LOW_BITS) & ~w & HIGH_BITS; // 0x80 in the first byte that was LF
+			if (lf != 0)
+				return p + (Long.numberOfTrailingZeros(lf) >>> 3);
+		}
+
+		for (; p < to; ++p) {
+			if (buf[p] == LF_BYTE)
+				return p;
+		}
+
+		return -1;
+	}
+
 	/** Consumes a line, appending it to str unless it is null. */
 	private int scanLine(Text str) throws IOException {
 		/* We're reading data from in, but the head of the stream may be
@@ -170,31 +216,15 @@ public class LineReader implements Closeable {
 				}
 			}
 
-			final byte[] buf = buffer;
-			final int length = bufferLength;
-			int p = bufferPos;
+			int lf = indexOfLF(buffer, bufferPos, bufferLength); //search for newline
+			int p;
 
-			for (; p + Long.BYTES <= length; p += Long.BYTES) { //search for newline, a word at a time
-				long w = (long) WORD.get(buf, p) ^ LF_WORD;
-				long lf = (w - LOW_BITS) & ~w & HIGH_BITS; // 0x80 in the first byte that was LF
-				if (lf != 0) {
-					p += Long.numberOfTrailingZeros(lf) >>> 3;
-					newLine = true;
-					break;
-				}
+			if (lf >= 0) {
+				newLine = true;
+				p = lf + 1; // at next invocation proceed from following byte
+			} else {
+				p = bufferLength;
 			}
-
-			if (!newLine) {
-				for (; p < length; ++p) {
-					if (buf[p] == LF_BYTE) {
-						newLine = true;
-						break;
-					}
-				}
-			}
-
-			if (newLine)
-				++p; // at next invocation proceed from following byte
 
 			bufferPos = p;
 			readLength = bufferPos - startPos;

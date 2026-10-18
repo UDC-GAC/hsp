@@ -63,39 +63,46 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			 * it would have reached after reading the same lines.
 			 */
 			long recordStart = pos;
-			appendLine(value);
+			boolean usualShape = true;
 
-			int next = peek();
-			if (next < 0) //EOF
-				return false;
-
-			if (next == '@') {
-				//The line read was the quality line of a previous record: the header is the next one
-				value.clear();
-				int line = appendLine(value);
-
-				if (!startRecord(pos - line))
-					return false;
-
-				if (getTrimSequenceName()) {
-					//Trim spaces in sequence name
-					LineReader.trim(value, 2);
-				}
-
-				i = 1;
-				found = true;
-			} else {
-				if (getTrimSequenceName()) {
-					//Trim spaces in sequence name
-					LineReader.trim(value, 2);
-				}
-
+			if (getTrimSequenceName() || appendTwoLines(value, '@') == 0) {
 				appendLine(value);
 
+				int next = peek();
+				if (next < 0) //EOF
+					return false;
+
+				if (next == '@') {
+					//The line read was the quality line of a previous record: the header is the next one
+					value.clear();
+					int line = appendLine(value);
+
+					if (!startRecord(pos - line))
+						return false;
+
+					if (getTrimSequenceName()) {
+						//Trim spaces in sequence name
+						LineReader.trim(value, 2);
+					}
+
+					i = 1;
+					found = true;
+					usualShape = false;
+				} else {
+					if (getTrimSequenceName()) {
+						//Trim spaces in sequence name
+						LineReader.trim(value, 2);
+					}
+
+					appendLine(value);
+				}
+			}
+
+			if (usualShape) {
 				if (!startRecord(recordStart))
 					return false;
 
-				next = peek();
+				int next = peek();
 				if (next < 0) { //EOF
 					warnTruncatedRecord();
 					return false;

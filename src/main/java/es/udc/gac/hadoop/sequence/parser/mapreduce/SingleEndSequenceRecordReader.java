@@ -202,6 +202,12 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		return bytesRead;
 	}
 
+	protected int appendTwoLines(Text str, int notFirstByte) {
+		int bytesRead = lineReader.appendTwoLines(str, notFirstByte);
+		pos += bytesRead;
+		return bytesRead;
+	}
+
 	protected int skipLine() throws IOException {
 		int bytesRead = lineReader.skipLine();
 		pos += bytesRead;

@@ -1,6 +1,7 @@
 package es.udc.gac.hadoop.sequence.parser.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -277,6 +278,104 @@ public class LineReaderTest {
 				assertEquals(0, lr.skipLine());
 			}
 		}
+	}
+
+	@Test
+	public void appendTwoLinesAppendsBothWhenTheyAreCompleteInTheBuffer() throws IOException {
+		LineReader lr = reader("ab\ncd\nef\n", 64);
+		Text t = new Text("x");
+
+		lr.peek(); // fills the buffer
+		assertEquals(6, lr.appendTwoLines(t, '@'));
+		assertEquals("xab\ncd\n", t.toString());
+		assertEquals(3, lr.readLine(t));
+		assertEquals("ef\n", t.toString());
+	}
+
+	@Test
+	public void appendTwoLinesConsumesNothingIfTheSecondLineStartsWithTheExcludedByte() throws IOException {
+		LineReader lr = reader("ab\n@cd\n", 64);
+		Text t = new Text();
+
+		lr.peek();
+		assertEquals(0, lr.appendTwoLines(t, '@'));
+		assertEquals("", t.toString());
+		assertEquals(3, lr.readLine(t));
+		assertEquals("ab\n", t.toString());
+		assertEquals("@cd\n", readAll(lr).get(0));
+	}
+
+	@Test
+	public void appendTwoLinesConsumesNothingIfALineIsMissingOrNotTerminated() throws IOException {
+		for (String data : new String[] { "", "abcd", "ab\n", "ab\ncd" }) {
+			LineReader lr = reader(data, 64);
+			Text t = new Text();
+
+			lr.peek();
+			assertEquals(data, 0, lr.appendTwoLines(t, '@'));
+			assertEquals(data, "", t.toString());
+			assertEquals(data, data, String.join("", readAll(lr)));
+		}
+	}
+
+	@Test
+	public void appendTwoLinesDoesNotRefillTheBuffer() throws IOException {
+		LineReader lr = reader("ab\ncd\nef\n", 64);
+		Text t = new Text();
+
+		assertEquals(0, lr.appendTwoLines(t, '@')); // nothing buffered yet
+		assertEquals("", t.toString());
+		assertEquals(3, lr.readLine(t));
+
+		// the second line is cut by the end of the buffer
+		lr = reader("ab\ncd\nef\n", 5);
+		lr.peek();
+		assertEquals(0, lr.appendTwoLines(t, '@'));
+		assertEquals(3, lr.readLine(t));
+		assertEquals("ab\n", t.toString());
+	}
+
+	@Test
+	public void appendTwoLinesGivesTheSameLinesAsAppendLine() throws IOException {
+		byte[] alphabet = { '\n', '\n', 0x0B, (byte) 0x8A, 0x00, 'A', '@' };
+		java.util.Random rnd = new java.util.Random(11);
+		int together = 0;
+
+		for (int round = 0; round < 300; round++) {
+			byte[] data = new byte[rnd.nextInt(200)];
+			for (int i = 0; i < data.length; i++)
+				data[i] = alphabet[rnd.nextInt(alphabet.length)];
+
+			for (int bufferSize : new int[] { 3, 8, 9, 64, 1000 }) {
+				LineReader both = new LineReader(new ByteArrayInputStream(data), bufferSize);
+				LineReader single = new LineReader(new ByteArrayInputStream(data), bufferSize);
+				Text a = new Text(), b = new Text(), x = new Text(), y = new Text();
+
+				while (both.peek() >= 0) {
+					String msg = "round " + round + ", buffer size " + bufferSize;
+					a.clear();
+					int n = both.appendTwoLines(a, '@');
+
+					if (n > 0) {
+						together++;
+						x.clear();
+						y.clear();
+						assertEquals(msg, n, single.appendLine(x) + single.appendLine(y));
+						assertTrue(msg, (y.getBytes()[0] & 0xFF) != '@');
+						byte[] expected = new byte[n];
+						System.arraycopy(x.getBytes(), 0, expected, 0, x.getLength());
+						System.arraycopy(y.getBytes(), 0, expected, x.getLength(), y.getLength());
+						assertEquals(msg, new Text(expected), a);
+					} else {
+						assertEquals(msg, "", a.toString());
+						assertEquals(msg, single.readLine(y), both.readLine(b));
+						assertEquals(msg, y, b);
+					}
+				}
+				assertEquals(0, single.readLine(y));
+			}
+		}
+		assertTrue("the test did not exercise appendTwoLines()", together > 100);
 	}
 
 	@Test
