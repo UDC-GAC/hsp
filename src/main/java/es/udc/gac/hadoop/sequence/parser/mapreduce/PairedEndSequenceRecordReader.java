@@ -44,9 +44,11 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Pa
 	private LongWritable key;
 	private PairText value;
 	private Text left, right;
+	private PairedEndInputSplit inputSplit;
 
 	public PairedEndSequenceRecordReader(PairedEndInputSplit inputSplit, TaskAttemptContext context) throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
+		this.inputSplit = inputSplit;
 
 		// Create left and right record readers
 		try {
@@ -61,7 +63,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Pa
 			leftRR = (SingleEndSequenceRecordReader) leftInputFormat.createRecordReader(inputSplit.get(0), context);
 			rightRR = (SingleEndSequenceRecordReader) rightInputFormat.createRecordReader(inputSplit.get(1), context);
 		} catch (ClassNotFoundException e) {
-			throw new IOException(e.getMessage());
+			throw new IOException(e.getMessage(), e);
 		}
 
 		key = new LongWritable();
@@ -103,16 +105,16 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Pa
 
 		if (leftRR.nextKeyValue()) {
 			if(!rightRR.nextKeyValue())
-				throw new IOException("Unexpected end of split for right record reader");
+				throw new IOException("Unexpected end of split for right record reader: "+inputSplit.getPath(0)+" has more records ("+leftRR.getCurrentKey()+") than "+inputSplit.getPath(1));
 
 			if(leftRR.getCurrentKey().get() != rightRR.getCurrentKey().get())
-				throw new IOException("Unexpected different keys");
+				throw new IOException("Unexpected different keys: "+leftRR.getCurrentKey()+" in "+inputSplit.getPath(0)+", "+rightRR.getCurrentKey()+" in "+inputSplit.getPath(1));
 
 			left = leftRR.getCurrentValue();
 			right = rightRR.getCurrentValue();
 
 			if(left.getLength() != right.getLength())
-				throw new IOException("Unexpected different lengths");
+				throw new IOException("Unexpected different lengths for the record at "+leftRR.getCurrentKey()+": "+left.getLength()+" in "+inputSplit.getPath(0)+", "+right.getLength()+" in "+inputSplit.getPath(1));
 
 			key.set(leftRR.getCurrentKey().get());
 			value.setLeft(left);
@@ -121,7 +123,7 @@ public class PairedEndSequenceRecordReader extends RecordReader<LongWritable, Pa
 		}
 
 		if(rightRR.nextKeyValue())
-			throw new IOException("Unexpected end of split for left record reader");
+			throw new IOException("Unexpected end of split for left record reader: "+inputSplit.getPath(1)+" has more records ("+rightRR.getCurrentKey()+") than "+inputSplit.getPath(0));
 
 		return false;
 	}

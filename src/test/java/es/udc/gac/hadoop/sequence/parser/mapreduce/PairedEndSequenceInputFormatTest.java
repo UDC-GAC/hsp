@@ -447,6 +447,15 @@ public class PairedEndSequenceInputFormatTest {
 	}
 
 	@Test
+	public void mismatchMessagesNameTheFilesAndTheOffsets() throws Exception {
+		assertReadFails("@a\nA\n+\nI\n@b\nC\n+\nJ\n", "@a\nT\n+\nI\n", "l.fq has more records (9) than ");
+		assertReadFails("@a\nA\n+\nI\n", "@a\nT\n+\nI\n@b\nG\n+\nJ\n", "r.fq has more records (9) than ");
+		assertReadFails("@a x\nA\n+\nI\n@b\nC\n+\nJ\n", "@a\nT\n+\nI\n@b\nG\n+\nJ\n", "11 in file:");
+		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, false);
+		assertReadFails("@a x\nAC\n+\nII\n", "@a\nACGT\n+\nIIII\n", "record at 0: 13 in file:");
+	}
+
+	@Test
 	public void pairedReadsAreDecodedAsStrings() throws Exception {
 		PairText pair = new PairText(new org.apache.hadoop.io.Text("@a\nA\n+\nI\n"), new org.apache.hadoop.io.Text("@a\nT\n+\nI\n"));
 

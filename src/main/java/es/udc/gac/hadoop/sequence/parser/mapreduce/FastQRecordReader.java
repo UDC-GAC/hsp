@@ -22,8 +22,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
@@ -35,7 +33,6 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
  */
 public class FastQRecordReader extends SingleEndSequenceRecordReader {
 
-	private static final Logger logger = LogManager.getLogger();
 	private static final int NUMBER_OF_LINES_PER_READ = 4;
 	private static final Text FASTQ_COMMENT_LINE = new Text("+" + LineReader.LF);
 
@@ -55,8 +52,6 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		logger.trace("init: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
-
 		if (isSplitFinished())
 			return false;
 
@@ -64,24 +59,28 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			firstRead = readLine(newLine);
 			i++;
 
-			if (firstRead == 0) //EOF
+			if (firstRead == 0) { //EOF
+				if (found)
+					warnTruncatedRecord();
 				return false;
+			}
 
 			if (found && i == NUMBER_OF_LINES_PER_READ) {
-				logger.trace("last line and starting '@' has been previously found");
 				value.append(newLine.getBytes(), 0, newLine.getLength());
 				break;
 			}
 
 			if (newLine.getBytes()[0] == '@') {
-				logger.trace("starting '@' has been found at line {}", i);
 				boolean firstHeader = !found;
 				found = true;
 
 				secondRead = readLine(temp);
 
-				if (secondRead == 0) //EOF
+				if (secondRead == 0) { //EOF
+					if (!firstHeader)
+						warnTruncatedRecord();
 					return false;
+				}
 
 				if (temp.getBytes()[0] != '@') {
 					if (firstHeader && !startRecord(pos - firstRead - secondRead))
@@ -116,12 +115,9 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (i == NUMBER_OF_LINES_PER_READ) {
-				logger.trace("last line and no starting '@' has been found (discarding previous data)");
 				i = 0;
 			}
 		}
-
-		logger.trace("finish: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 		return true;
 	}

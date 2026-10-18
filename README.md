@@ -45,6 +45,10 @@ For single-end datasets, HSP generates <key,value> pairs of type <*LongWritable*
 
 For paired-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *PairText*>. The key is the byte offset in file for each paired read and the value is a tuple containing the pair of the *Text* objects that represent the paired sequence. HSP provides static methods in the *PairedEndSequenceRecordReader* class that allow obtaining "left" and "right" reads separately as *String* objects: *getLeftRead()* and *getRightRead()*, respectively.
 
+### Logging
+
+HSP logs through the [SLF4J](https://www.slf4j.org/) API and does not bundle any logging backend: messages go wherever your application, Hadoop, Spark or Flink send their logs. The logger names are the HSP class names (package `es.udc.gac.hadoop.sequence.parser`). At `DEBUG` level each input split is described when it is opened and closed, and a `WARN` is emitted if a FASTQ file ends in the middle of a record. Nothing is logged per record.
+
 ### Hadoop examples
 
 Setting up the input format of a Hadoop job for a single-end dataset in FASTQ format stored in "/path/to/file":

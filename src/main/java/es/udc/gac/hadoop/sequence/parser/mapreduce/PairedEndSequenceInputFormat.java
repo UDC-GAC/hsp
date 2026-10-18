@@ -39,8 +39,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Text-based InputFormat for paired-end sequence files.
@@ -51,7 +51,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, PairText> {
 
-	private static final Logger logger = LogManager.getLogger();
+	private static final Logger logger = LoggerFactory.getLogger(PairedEndSequenceInputFormat.class);
 	private static final double SPLIT_SLOP = 1.1; // 10% slop
 
 	public static final String LEFT_INPUT_PATH = "hsra.paired.left.path";
@@ -227,12 +227,10 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 		try {
 			leftSplits = getInputSplits(job, leftPath, leftInputFormat);
 			rightSplits = getInputSplits(job, rightPath, rightInputFormat);
-			if (logger.isDebugEnabled()) {
-				logger.debug(leftSplits);
-				logger.debug(rightSplits);
-			}
+			logger.debug("Input splits of {}: {}", leftPath, leftSplits);
+			logger.debug("Input splits of {}: {}", rightPath, rightSplits);
 		} catch (ClassNotFoundException e) {
-			throw new IOException(e.getMessage());
+			throw new IOException(e.getMessage(), e);
 		}
 
 		if(leftSplits.size() == 0)
@@ -242,7 +240,7 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 			throw new IOException("No file splits have been generated for input path "+rightPath);
 
 		if(leftSplits.size() != rightSplits.size())
-			throw new IOException("Number of file splits does not match: "+leftSplits.size()+","+rightSplits.size());
+			throw new IOException("Number of file splits does not match: "+leftSplits.size()+","+rightSplits.size()+" ("+leftPath+", "+rightPath+")");
 
 		// Generate composite input splits
 		List<InputSplit> splits = new ArrayList<InputSplit>(leftSplits.size());
@@ -255,7 +253,7 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 				splits.add(pairedSplit);
 			}
 		} catch (InterruptedException e) {
-			throw new IOException(e.getMessage());
+			throw new IOException(e.getMessage(), e);
 		}
 
 		return splits;

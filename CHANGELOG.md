@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Next release: 2.0.0.
 
 ### Added
+- A `WARN` message (file and offset of the record) when a FASTQ file ends in the middle of a record. The incomplete record was already dropped, but silently.
 - Unit and integration tests (JUnit 4) for the line reader, the FASTQ/FASTA record readers, the single-end and paired-end input formats and splits (plain, gzip and bzip2 input), including an exhaustive split-boundary sweep and golden files pinning the output format.
 - `coverage` Maven profile (JaCoCo): `mvn test -Pcoverage`.
 
@@ -27,7 +28,10 @@ Next release: 2.0.0.
 - The key of the first record of an uncompressed split that starts in the middle of another record was the position where the reader started scanning, not the byte offset of the record as documented. It is now the offset of the record, so keys no longer depend on where the splits are cut. This also fixes spurious "Unexpected different keys" errors in paired-end datasets whose files differ in the length of the discarded lines.
 
 ### Changed
+- Logging reworked. HSP now depends only on the SLF4J API (`provided`: Hadoop, Spark and Flink already ship it) and no longer bundles Log4j2 nor its `log4j2.xml`, so the logging backend, format and levels are the ones of your application or engine (logger `es.udc.gac.hadoop.sequence.parser`). The `[HSP]` lines that HSP used to print to the standard output are gone.
+- The record readers no longer log anything per record or per line (9 `trace` calls removed from `nextKeyValue()`: 5 in FASTQ and 4 in FASTA, one of them evaluated for every line). Even with the level disabled they built their arguments in the hot path, which cost up to 144 B of allocation per record in FASTQ and 360 B in FASTA (when the JIT does not eliminate it); it is now zero. Each split is described with two `DEBUG` messages (opened, closed) instead of an `INFO` one per split.
+- Error messages of the paired-end classes now name the files and offsets involved (different keys or lengths, one file with more records, different number of splits), and `IOException`s wrapping another exception keep it as their cause.
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
-- Build: project version 2.0.0, compiled with `maven.compiler.release` 11 against Hadoop 3.3.6 (`provided`); updated Log4j to 2.26.1 and the compiler, Surefire, JaCoCo and build-helper Maven plugins.
+- Build: project version 2.0.0, compiled with `maven.compiler.release` 11 against Hadoop 3.3.6 (`provided`); updated the compiler, Surefire, JaCoCo and build-helper Maven plugins.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.
 - Java requirement increased from 1.6 to 1.8 (superseded by the Java 11 minimum above).

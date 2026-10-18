@@ -37,8 +37,8 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import es.udc.gac.hadoop.sequence.parser.util.Configuration;
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
@@ -52,7 +52,8 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
  */
 public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWritable, Text> {
 
-	private static final Logger logger = LogManager.getLogger();
+	private static final Logger logger = LoggerFactory.getLogger(SingleEndSequenceRecordReader.class);
+	private Path file;
 	private FSDataInputStream fileInputStream;
 	private CompressionInputStream compressionFileInputStream;
 	private Seekable filePos;
@@ -101,26 +102,22 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 	public void initialize(InputSplit genericSplit, TaskAttemptContext context) throws IOException {
 		org.apache.hadoop.conf.Configuration conf = context.getConfiguration();
 		FileSplit split = (FileSplit) genericSplit;
-		Path file = split.getPath();
+		file = split.getPath();
 		start = split.getStart();
 		end = start + split.getLength();
 
-		logger.debug("input buffer size {}", bufferSize);
-
 		// open the file
-		logger.info("opening input split {}", split.toString());
 		fileInputStream = file.getFileSystem(conf).open(file);
 
 		// Check if input file is compressed
 		CompressionCodec codec = new CompressionCodecFactory(conf).getCodec(file);
+		String codecName = codec == null ? "none" : codec.getClass().getSimpleName();
 
 		if (codec != null) {
 			isCompressedInput = true;
 			decompressor = CodecPool.getDecompressor(codec);
 
 			if (codec instanceof SplittableCompressionCodec) {
-				logger.debug("input split is compressed using a splittable codec ({})", codec.getClass().getSimpleName());
-
 				// Get split compression input stream
 				compressionFileInputStream = ((SplittableCompressionCodec) codec)
 						.createInputStream(fileInputStream, decompressor, start, end, SplittableCompressionCodec.READ_MODE.BYBLOCK);
@@ -131,15 +128,13 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 				end = ((SplitCompressionInputStream) compressionFileInputStream).getAdjustedEnd();
 				filePos = compressionFileInputStream;
 			} else {
-				logger.debug("input split is compressed using a non-splittable codec ({})", codec.getClass().getSimpleName());
-
 				if (start != 0) {
 					/*
 					 * We have a split that is only part of a file stored using
 					 * a non-splittable codec
 					 */
-					throw new IOException("Cannot seek in " +
-							codec.getClass().getSimpleName() + " compressed stream");
+					throw new IOException("Cannot seek in " + codecName + " compressed stream: split starting at offset "
+							+ start + " of non-splittable file " + file);
 				}
 
 				// Get compression input stream
@@ -151,7 +146,6 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 			}
 
 		} else {
-			logger.debug("input split is not compressed");
 			isCompressedInput = false;
 
 			// Seek to the start of the split
@@ -167,15 +161,17 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		 * because we always (except the last split) read one extra record
 		 * in nextKeyValue() method (see also isSplitFinished() method)
 		 */
+		int skipped = 0;
 		if (start != 0) {
-			start += readLine(value);
-			logger.debug("skipped '{}'", value);
+			skipped = readLine(value);
+			start += skipped;
 			value.clear();
 		}
 
 		pos = start;
 
-		logger.debug("record reader initialized: start {}, end {}, splitPos {}", start, end, getSplitPosition());
+		logger.debug("Opened split [{}, {}) of {} (codec: {}): reading records from offset {} to {} ({} bytes of the leading partial line skipped)",
+				split.getStart(), split.getStart() + split.getLength(), file, codecName, start, end, skipped);
 	}
 
 	@Override
@@ -185,6 +181,8 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 				lineReader.close();
 			}
 		} finally {
+			logger.debug("Closed reader of {} at position {}", file, pos);
+
 			if (decompressor != null) {
 				CodecPool.returnDecompressor(decompressor);
 				decompressor = null;
@@ -233,6 +231,14 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 
 		key.set(recordStart);
 		return true;
+	}
+
+	/**
+	 * Warns that the file ends in the middle of the record whose key has been set by startRecord(): the
+	 * partial record is not returned. Called at most once per split, so it is not in the per-record path.
+	 */
+	protected void warnTruncatedRecord() {
+		logger.warn("Unexpected end of file {}: the record starting at offset {} is incomplete and has been ignored", file, key.get());
 	}
 
 	protected long getSplitPosition() throws IOException {

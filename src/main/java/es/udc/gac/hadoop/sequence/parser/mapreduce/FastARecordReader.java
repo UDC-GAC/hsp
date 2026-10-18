@@ -22,8 +22,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import es.udc.gac.hadoop.sequence.parser.util.LineReader;
 
@@ -35,7 +33,6 @@ import es.udc.gac.hadoop.sequence.parser.util.LineReader;
  */
 public class FastARecordReader extends SingleEndSequenceRecordReader {
 
-	private static final Logger logger = LogManager.getLogger();
 	private Text newLine;
 	/* The header of the next record is read while finding the end of the current one, so it is kept in newLine for the next call */
 	private boolean pendingHeader;
@@ -52,8 +49,6 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 		boolean found = false;
 		value.clear();
 
-		logger.trace("init: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
-
 		if (isSplitFinished())
 			return false;
 
@@ -66,8 +61,6 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				read = readLine(newLine);
 			}
 
-			logger.trace("start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
-
 			if (read == 0) {
 				// EOF
 				if (found)
@@ -76,8 +69,6 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 			}
 
 			if (newLine.getBytes()[0] == '>') {
-				logger.trace("starting '>' has been found");
-
 				if (found) {
 					pos -= read;
 					pendingHeader = true;
@@ -98,8 +89,6 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 			if (found)
 				value.append(newLine.getBytes(), 0, newLine.getLength());
 		}
-
-		logger.trace("finish: start {}, end {}, pos {}, splitPos {}", start, end, pos, getSplitPosition());
 
 		return true;
 	}
