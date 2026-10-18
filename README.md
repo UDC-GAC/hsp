@@ -8,10 +8,12 @@ HSP supports the processing of input datasets compressed with Gzip (i.e., .gz ex
 
 ### Prerequisites
 
-* Make sure you have Java Develpment Environment (JDK) version 1.6 or above
+* Make sure you have Java Development Kit (JDK) version 11 or above
 
 * Make sure you have a working Apache Maven distribution version 3 or above
   * See https://maven.apache.org/install.html
+
+* HSP is built against Apache Hadoop 3.3 (which is a *provided* dependency, so the Hadoop version is the one of your cluster or engine). Use HSP 1.3 for Java 8 or earlier Hadoop versions
 
 ### Installation
 
@@ -33,7 +35,7 @@ In order to use the HSP library in your projects, add the following dependency s
   <dependency>
    <groupId>es.udc.gac</groupId>
    <artifactId>hadoop-sequence-parser</artifactId>
-   <version>1.2</version> <!-- or latest version -->
+   <version>2.0.0</version> <!-- or latest version -->
   </dependency>
 ...
 </dependencies>

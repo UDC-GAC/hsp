@@ -28,5 +28,6 @@ Next release: 2.0.0.
 
 ### Changed
 - Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
+- Build: project version 2.0.0, compiled with `maven.compiler.release` 11 against Hadoop 3.3.6 (`provided`); updated Log4j to 2.26.1 and the compiler, Surefire, JaCoCo and build-helper Maven plugins.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.
 - Java requirement increased from 1.6 to 1.8 (superseded by the Java 11 minimum above).
