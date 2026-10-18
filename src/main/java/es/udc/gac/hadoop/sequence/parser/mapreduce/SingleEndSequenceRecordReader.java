@@ -196,6 +196,22 @@ public abstract class SingleEndSequenceRecordReader extends RecordReader<LongWri
 		return bytesRead;
 	}
 
+	protected int appendLine(Text str) throws IOException {
+		int bytesRead = lineReader.appendLine(str);
+		pos += bytesRead;
+		return bytesRead;
+	}
+
+	protected int skipLine() throws IOException {
+		int bytesRead = lineReader.skipLine();
+		pos += bytesRead;
+		return bytesRead;
+	}
+
+	protected int peek() throws IOException {
+		return lineReader.peek();
+	}
+
 	protected void seek(long pos) throws IOException {
 		lineReader.seek(pos);
 	}

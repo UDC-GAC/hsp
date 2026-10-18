@@ -55,6 +55,69 @@ public class FastQRecordReader extends SingleEndSequenceRecordReader {
 		if (isSplitFinished())
 			return false;
 
+		if (peek() == '@') {
+			/*
+			 * The usual shape of a record: header, sequence, comment line and quality line. Each line is
+			 * read straight into value, after looking at the first byte of the next one to know whether
+			 * it is the shape handled below. Any other case goes on in the general loop, in the state
+			 * it would have reached after reading the same lines.
+			 */
+			long recordStart = pos;
+			appendLine(value);
+
+			int next = peek();
+			if (next < 0) //EOF
+				return false;
+
+			if (next == '@') {
+				//The line read was the quality line of a previous record: the header is the next one
+				value.clear();
+				int line = appendLine(value);
+
+				if (!startRecord(pos - line))
+					return false;
+
+				if (getTrimSequenceName()) {
+					//Trim spaces in sequence name
+					LineReader.trim(value, 2);
+				}
+
+				i = 1;
+				found = true;
+			} else {
+				if (getTrimSequenceName()) {
+					//Trim spaces in sequence name
+					LineReader.trim(value, 2);
+				}
+
+				appendLine(value);
+
+				if (!startRecord(recordStart))
+					return false;
+
+				next = peek();
+				if (next < 0) { //EOF
+					warnTruncatedRecord();
+					return false;
+				}
+
+				if (next == '@') {
+					i = 2;
+					found = true;
+				} else {
+					skipLine();
+					value.append(FASTQ_COMMENT_LINE.getBytes(), 0, FASTQ_COMMENT_LINE.getLength());
+
+					if (appendLine(value) == 0) { //EOF
+						warnTruncatedRecord();
+						return false;
+					}
+
+					return true;
+				}
+			}
+		}
+
 		while (true) {
 			firstRead = readLine(newLine);
 			i++;

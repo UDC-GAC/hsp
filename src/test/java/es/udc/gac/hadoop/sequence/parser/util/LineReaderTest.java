@@ -129,6 +129,157 @@ public class LineReaderTest {
 	}
 
 	@Test
+	public void appendLineKeepsWhatTheTextAlreadyHas() throws IOException {
+		LineReader lr = reader("abc\nde\n", 64);
+		Text t = new Text("x");
+
+		assertEquals(4, lr.appendLine(t));
+		assertEquals("xabc\n", t.toString());
+		assertEquals(3, lr.appendLine(t));
+		assertEquals("xabc\nde\n", t.toString());
+		assertEquals(0, lr.appendLine(t));
+		assertEquals("xabc\nde\n", t.toString());
+	}
+
+	@Test
+	public void skipLineConsumesTheLineWithoutCopyingIt() throws IOException {
+		LineReader lr = reader("abc\n\nde", 64);
+		Text t = new Text();
+
+		assertEquals(4, lr.skipLine());
+		assertEquals(1, lr.skipLine());
+		assertEquals(2, lr.readLine(t));
+		assertEquals("de", t.toString());
+		assertEquals(0, lr.skipLine());
+	}
+
+	@Test
+	public void skipLineAcrossBuffersCountsEveryByte() throws IOException {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 100; i++)
+			sb.append('x');
+
+		for (int bufferSize : new int[] { 1, 7, 8, 64, 101 }) {
+			LineReader lr = reader(sb + "\n" + sb + "\nrest\n", bufferSize);
+			Text t = new Text();
+
+			assertEquals("buffer size " + bufferSize, 101, lr.skipLine());
+			assertEquals("buffer size " + bufferSize, 101, lr.skipLine());
+			assertEquals("buffer size " + bufferSize, 5, lr.readLine(t));
+		}
+	}
+
+	@Test
+	public void peekReturnsTheFirstByteOfTheNextLineWithoutConsumingIt() throws IOException {
+		LineReader lr = reader("@abc\n\u00ffx\n", 64);
+		Text t = new Text();
+
+		assertEquals('@', lr.peek());
+		assertEquals('@', lr.peek());
+		assertEquals(5, lr.readLine(t));
+		assertEquals("@abc\n", t.toString());
+		assertEquals(0xC3, lr.peek()); // UTF-8 of U+00FF, as an unsigned byte
+		assertEquals(4, lr.skipLine());
+		assertEquals(-1, lr.peek());
+		assertEquals(-1, lr.peek());
+		assertEquals(0, lr.readLine(t));
+	}
+
+	@Test
+	public void peekRefillsTheBufferBetweenLines() throws IOException {
+		for (int bufferSize = 1; bufferSize <= 12; bufferSize++) {
+			LineReader lr = reader("ab\ncd\nef", bufferSize);
+			Text t = new Text();
+
+			for (String line : new String[] { "ab\n", "cd\n", "ef" }) {
+				assertEquals("buffer size " + bufferSize, line.charAt(0), lr.peek());
+				assertEquals("buffer size " + bufferSize, line.length(), lr.readLine(t));
+				assertEquals("buffer size " + bufferSize, line, t.toString());
+			}
+			assertEquals("buffer size " + bufferSize, -1, lr.peek());
+		}
+	}
+
+	@Test
+	public void peekToleratesShortReadsFromTheUnderlyingStream() throws IOException {
+		final byte[] data = "abc\ndef".getBytes(StandardCharsets.UTF_8);
+		InputStream oneByteAtATime = new InputStream() {
+			private int pos = 0;
+
+			@Override
+			public int read() {
+				return pos < data.length ? data[pos++] : -1;
+			}
+
+			@Override
+			public int read(byte[] b, int off, int len) {
+				if (pos >= data.length)
+					return -1;
+				b[off] = data[pos++];
+				return 1;
+			}
+		};
+		LineReader lr = new LineReader(oneByteAtATime, 8);
+		Text t = new Text();
+
+		assertEquals('a', lr.peek());
+		assertEquals(4, lr.readLine(t));
+		assertEquals('d', lr.peek());
+		assertEquals("def", readAll(lr).get(0));
+	}
+
+	@Test
+	public void mixedOperationsGiveTheSameLinesAsASimpleSplitter() throws IOException {
+		byte[] alphabet = { '\n', '\n', 0x0B, (byte) 0x8A, 0x00, (byte) 0xFF, 'A', '@' };
+		java.util.Random rnd = new java.util.Random(7);
+
+		for (int round = 0; round < 200; round++) {
+			byte[] data = new byte[rnd.nextInt(200)];
+			for (int i = 0; i < data.length; i++)
+				data[i] = alphabet[rnd.nextInt(alphabet.length)];
+
+			List<byte[]> expected = new ArrayList<>();
+			int from = 0;
+			for (int i = 0; i < data.length; i++) {
+				if (data[i] == '\n') {
+					expected.add(java.util.Arrays.copyOfRange(data, from, i + 1));
+					from = i + 1;
+				}
+			}
+			if (from < data.length)
+				expected.add(java.util.Arrays.copyOfRange(data, from, data.length));
+
+			for (int bufferSize : new int[] { 1, 3, 8, 9, 64 }) {
+				LineReader lr = new LineReader(new ByteArrayInputStream(data), bufferSize);
+				Text t = new Text();
+				for (int i = 0; i < expected.size(); i++) {
+					String msg = "round " + round + ", buffer size " + bufferSize + ", line " + i;
+					t.set("prefix");
+					assertEquals(msg, expected.get(i)[0] & 0xFF, lr.peek());
+
+					switch (rnd.nextInt(3)) {
+					case 0:
+						assertEquals(msg, expected.get(i).length, lr.readLine(t));
+						assertEquals(msg, new Text(expected.get(i)), t);
+						break;
+					case 1:
+						assertEquals(msg, expected.get(i).length, lr.appendLine(t));
+						byte[] withPrefix = new byte[6 + expected.get(i).length];
+						System.arraycopy("prefix".getBytes(StandardCharsets.US_ASCII), 0, withPrefix, 0, 6);
+						System.arraycopy(expected.get(i), 0, withPrefix, 6, expected.get(i).length);
+						assertEquals(msg, new Text(withPrefix), t);
+						break;
+					default:
+						assertEquals(msg, expected.get(i).length, lr.skipLine());
+					}
+				}
+				assertEquals(-1, lr.peek());
+				assertEquals(0, lr.skipLine());
+			}
+		}
+	}
+
+	@Test
 	public void lineLongerThanBufferIsReadWhole() throws IOException {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 1000; i++)

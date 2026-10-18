@@ -86,7 +86,8 @@ public class LineReader implements Closeable {
 	}
 
 	/**
-	 * Read a line from the InputStream terminated by LF into the given Text.
+	 * Read a line from the InputStream terminated by LF into the given Text,
+	 * replacing its previous contents.
 	 *
 	 * @param str the object to store the given line (including LF) 
 	 *
@@ -95,6 +96,57 @@ public class LineReader implements Closeable {
 	 * @throws IOException
 	 */
 	public int readLine(Text str) throws IOException {
+		str.clear();
+		return scanLine(str);
+	}
+
+	/**
+	 * Read a line from the InputStream terminated by LF and append it to the
+	 * given Text, which keeps its previous contents.
+	 *
+	 * @param str the object to append the line to (including LF) 
+	 *
+	 * @return the number of bytes read (including LF)
+	 *
+	 * @throws IOException
+	 */
+	public int appendLine(Text str) throws IOException {
+		return scanLine(str);
+	}
+
+	/**
+	 * Skip a line terminated by LF without copying it.
+	 *
+	 * @return the number of bytes skipped (including LF)
+	 *
+	 * @throws IOException
+	 */
+	public int skipLine() throws IOException {
+		return scanLine(null);
+	}
+
+	/**
+	 * Return the first byte of the next line without consuming it, or -1 at the
+	 * end of the stream. It must be called between two lines: it may refill the
+	 * buffer, which is only valid once the previous line has been fully consumed.
+	 *
+	 * @throws IOException
+	 */
+	public int peek() throws IOException {
+		if (bufferPos >= bufferLength) {
+			bufferPos = 0;
+			bufferLength = inputStream.read(buffer);
+
+			if (bufferLength <= 0) {
+				return -1; // EOF
+			}
+		}
+
+		return buffer[bufferPos] & 0xFF;
+	}
+
+	/** Consumes a line, appending it to str unless it is null. */
+	private int scanLine(Text str) throws IOException {
 		/* We're reading data from in, but the head of the stream may be
 		 * already buffered, so we have two cases:
 		 * 1. No newline characters are in the buffer, so we need to copy
@@ -106,7 +158,6 @@ public class LineReader implements Closeable {
 		long bytesConsumed = 0;
 		int readLength = 0;
 		int startPos = 0;
-		str.clear();
 
 		do {
 			startPos = bufferPos; //starting from where we left off the last time
@@ -148,7 +199,8 @@ public class LineReader implements Closeable {
 			bufferPos = p;
 			readLength = bufferPos - startPos;
 			bytesConsumed += readLength;
-			str.append(buffer, startPos, readLength);
+			if (str != null)
+				str.append(buffer, startPos, readLength);
 		} while (!newLine);
 
 		return (int) bytesConsumed;
