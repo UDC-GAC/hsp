@@ -43,6 +43,13 @@ public class FastARecordReaderTest {
 	}
 
 	@Test
+	public void nameIsKeptByDefault() throws Exception {
+		conf = new Configuration(false);
+
+		assertEquals(Arrays.asList(new Record(0, ">seq1 some description\nACGT\n")), read(">seq1 some description\nACGT\n"));
+	}
+
+	@Test
 	public void nameIsKeptWhenTrimmingIsDisabled() throws Exception {
 		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, false);
 

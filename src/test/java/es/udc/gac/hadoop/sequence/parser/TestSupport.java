@@ -258,6 +258,8 @@ public final class TestSupport {
 		// Not loading the default resources keeps the tests fast: the readers copy the configuration for each task context
 		Configuration conf = new Configuration(false);
 		conf.set("io.compression.codecs", "org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec");
+		// Most tests were written for trimmed names; the tests of the default (not trimmed) create their own configuration
+		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, true);
 		return conf;
 	}
 

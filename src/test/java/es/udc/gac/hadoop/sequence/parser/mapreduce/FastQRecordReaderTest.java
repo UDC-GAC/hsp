@@ -57,6 +57,15 @@ public class FastQRecordReaderTest {
 	}
 
 	@Test
+	public void nameIsKeptByDefault() throws Exception {
+		conf = new Configuration(false);
+
+		List<Record> records = read("@r1 some comment\nACGT\n+r1 some comment\nIIII\n");
+
+		assertEquals(Arrays.asList(new Record(0, "@r1 some comment\nACGT\n+\nIIII\n")), records);
+	}
+
+	@Test
 	public void nameIsKeptWhenTrimmingIsDisabled() throws Exception {
 		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, false);
 

@@ -29,7 +29,7 @@ public final class Configuration {
 	public static final String INPUT_BUFFER_SIZE_KEY = "hsp.input.buffer.size";
 	private static final int INPUT_BUFFER_SIZE_DEFAULT = 64*1024;
 	public static final String TRIM_SEQUENCE_NAME_KEY = "hsp.trim.sequence.name";
-	private static final boolean TRIM_SEQUENCE_NAME_DEFAULT = true;
+	private static final boolean TRIM_SEQUENCE_NAME_DEFAULT = false;
 
 	public static int getInputBufferSize(org.apache.hadoop.conf.Configuration conf) {
 		return conf.getInt(INPUT_BUFFER_SIZE_KEY, INPUT_BUFFER_SIZE_DEFAULT);

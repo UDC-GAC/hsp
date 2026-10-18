@@ -13,7 +13,7 @@ public class ConfigurationTest {
 		org.apache.hadoop.conf.Configuration conf = new org.apache.hadoop.conf.Configuration(false);
 
 		assertEquals(64 * 1024, Configuration.getInputBufferSize(conf));
-		assertTrue(Configuration.getTrimSequenceName(conf));
+		assertFalse(Configuration.getTrimSequenceName(conf));
 	}
 
 	@Test

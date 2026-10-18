@@ -45,6 +45,17 @@ For single-end datasets, HSP generates <key,value> pairs of type <*LongWritable*
 
 For paired-end datasets, HSP generates <key,value> pairs of type <*LongWritable*, *PairText*>. The key is the byte offset in file for each paired read and the value is a tuple containing the pair of the *Text* objects that represent the paired sequence. HSP provides static methods in the *PairedEndSequenceRecordReader* class that allow obtaining "left" and "right" reads separately as *String* objects: *getLeftRead()* and *getRightRead()*, respectively.
 
+### Configuration
+
+HSP is configured through the Hadoop configuration of the job (`Configuration` in Hadoop, the `config` object in the Spark examples, the `Job` configuration in Flink), either setting the property or with the static methods of `es.udc.gac.hadoop.sequence.parser.util.Configuration`:
+
+| Property | Default | Static method | Description |
+|----------|---------|---------------|-------------|
+| `hsp.input.buffer.size` | 65536 | `setInputBufferSize(conf, bytes)` | Size in bytes of the input buffer of the readers (also the initial size of the `Text` that holds each record) |
+| `hsp.trim.sequence.name` | `false` | `setTrimSequenceName(conf, true)` | Cut the read name at its first space, dropping the description that follows it (e.g. `@ERR188245.1 length=75` becomes `@ERR188245.1`). By default the name is kept as it is in the file. Enabling it makes the records shorter, which saves memory |
+
+Until HSP 1.3 the names were trimmed by default.
+
 ### Logging
 
 HSP logs through the [SLF4J](https://www.slf4j.org/) API and does not bundle any logging backend: messages go wherever your application, Hadoop, Spark or Flink send their logs. The logger names are the HSP class names (package `es.udc.gac.hadoop.sequence.parser`). At `DEBUG` level each input split is described when it is opened and closed, and a `WARN` is emitted if a FASTQ file ends in the middle of a record. Nothing is logged per record.
