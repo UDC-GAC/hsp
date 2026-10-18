@@ -57,6 +57,12 @@ public class FastARecordReader extends SingleEndSequenceRecordReader {
 				read = pendingHeaderLength;
 				pos += read;
 				pendingHeader = false;
+			} else if (found && peek() != '>') {
+				//A line of the sequence of the current record: straight into value
+				read = appendLine(value);
+				if (read == 0) //EOF
+					break;
+				continue;
 			} else {
 				read = readLine(newLine);
 			}

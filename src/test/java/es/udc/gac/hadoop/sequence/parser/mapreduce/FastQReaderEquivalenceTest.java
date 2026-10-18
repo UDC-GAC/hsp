@@ -2,6 +2,11 @@ package es.udc.gac.hadoop.sequence.parser.mapreduce;
 
 import static org.junit.Assert.assertEquals;
 
+import static es.udc.gac.hadoop.sequence.parser.mapreduce.EquivalenceSupport.BUFFER_SIZES;
+import static es.udc.gac.hadoop.sequence.parser.mapreduce.EquivalenceSupport.conf;
+import static es.udc.gac.hadoop.sequence.parser.mapreduce.EquivalenceSupport.read;
+import static es.udc.gac.hadoop.sequence.parser.mapreduce.EquivalenceSupport.word;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -12,13 +17,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.io.compress.GzipCodec;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import es.udc.gac.hadoop.sequence.parser.TestSupport;
+import es.udc.gac.hadoop.sequence.parser.mapreduce.EquivalenceSupport.Factory;
 
 /**
  * Compares FastQRecordReader with the reader it replaced (LegacyFastQRecordReader) on well-formed and
@@ -30,57 +35,22 @@ public class FastQReaderEquivalenceTest {
 	@Rule
 	public TemporaryFolder tmp = new TemporaryFolder();
 
-	private static final int[] BUFFER_SIZES = { 1, 2, 3, 7, 16, 65536 };
-
-	/** What a reader produced for a split: its records, the number of truncated record warnings and the error, if any. */
-	private static String read(boolean legacy, Configuration conf, Path path, long start, long length) {
-		TaskAttemptContext ctx = TestSupport.context(conf);
-		int[] warnings = { 0 };
-		SingleEndSequenceRecordReader reader = legacy ? new LegacyFastQRecordReader(ctx) {
-			@Override
-			protected void warnTruncatedRecord() {
-				warnings[0]++;
-			}
-		} : new FastQRecordReader(ctx) {
-			@Override
-			protected void warnTruncatedRecord() {
-				warnings[0]++;
-			}
-		};
-
-		StringBuilder sb = new StringBuilder();
-		try {
-			reader.initialize(new FileSplit(path, start, length, null), ctx);
-			while (reader.nextKeyValue())
-				sb.append(reader.getCurrentKey().get()).append(" [").append(SingleEndSequenceRecordReader.getRead(reader.getCurrentValue())).append("]\n");
-		} catch (Exception e) {
-			sb.append("ERROR ").append(e.getClass().getName()).append(": ").append(e.getMessage());
-		} finally {
-			try {
-				reader.close();
-			} catch (IOException e) {
-				sb.append("ERROR on close ").append(e);
-			}
+	private static final Factory LEGACY = (ctx, warnings) -> new LegacyFastQRecordReader(ctx) {
+		@Override
+		protected void warnTruncatedRecord() {
+			warnings[0]++;
 		}
-		return sb.append("warnings=").append(warnings[0]).toString();
-	}
+	};
 
-	private static Configuration conf(int bufferSize, boolean trim) {
-		Configuration conf = TestSupport.newConf();
-		es.udc.gac.hadoop.sequence.parser.util.Configuration.setInputBufferSize(conf, bufferSize);
-		es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, trim);
-		return conf;
-	}
+	private static final Factory CURRENT = (ctx, warnings) -> new FastQRecordReader(ctx) {
+		@Override
+		protected void warnTruncatedRecord() {
+			warnings[0]++;
+		}
+	};
 
 	private static void sameOutput(String what, Configuration conf, Path path, long start, long length) {
-		assertEquals(what, read(true, conf, path, start, length), read(false, conf, path, start, length));
-	}
-
-	private static String word(Random rnd, String alphabet, int len) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < len; i++)
-			sb.append(alphabet.charAt(rnd.nextInt(alphabet.length())));
-		return sb.toString();
+		assertEquals(what, read(LEGACY, conf, path, start, length), read(CURRENT, conf, path, start, length));
 	}
 
 	private static String randomLine(Random rnd) {
@@ -176,6 +146,23 @@ public class FastQReaderEquivalenceTest {
 					sameOutput("gzip, " + what, conf, gz, 0, Long.MAX_VALUE / 2);
 					sameOutput("bzip2, " + what, conf, bz, 0, Long.MAX_VALUE / 2);
 				}
+			}
+		}
+	}
+
+	/** Large enough to span several bzip2 blocks: the split ends are decided on the position of the compressed stream. */
+	@Test
+	public void sameRecordsOnBzip2SplitsOfSeveralBlocks() throws IOException {
+		Configuration conf = TestSupport.newConf();
+		byte[] data = TestSupport.fastq(30000, 11, true).getBytes(StandardCharsets.US_ASCII);
+		byte[] bz2 = TestSupport.compress(BZip2Codec.class, conf, data);
+		Path path = TestSupport.write(tmp.getRoot(), "big.fq.bz2", bz2);
+
+		for (int bufferSize : new int[] { 5, 65536 }) {
+			Configuration c = conf(bufferSize, true);
+			for (long splitSize : new long[] { 100_000, 250_000, 600_000 }) {
+				for (InputSplit split : TestSupport.getSplits(new FastQInputFormat(), c, path, splitSize))
+					assertEquals("buffer " + bufferSize + ", split size " + splitSize + ", split " + split, read(LEGACY, c, split), read(CURRENT, c, split));
 			}
 		}
 	}
