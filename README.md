@@ -56,11 +56,20 @@ HSP is configured through the Hadoop configuration of the job (`Configuration` i
 
 An invalid value (a buffer size that is not a positive integer, a flag other than `true` or `false`) makes the reader fail with an `IllegalArgumentException` that names the property.
 
-Until HSP 1.3 the names were trimmed by default.
-
 ### Logging
 
 HSP logs through the [SLF4J](https://www.slf4j.org/) API and does not bundle any logging backend: messages go wherever your application, Hadoop, Spark or Flink send their logs. The logger names are the HSP class names (package `es.udc.gac.hadoop.sequence.parser`). At `DEBUG` level each input split is described when it is opened and closed, and a `WARN` is emitted if a FASTQ file ends in the middle of a record. Nothing is logged per record.
+
+### Upgrading from HSP 1.3
+
+The full list of changes is in the [CHANGELOG](CHANGELOG.md). These are the ones that may require action in applications that use HSP:
+
+* **Read names are no longer trimmed by default.** HSP 1.3 cut the read name at its first space; HSP 2.0 keeps the name as it is in the file. To get the previous behaviour call `Configuration.setTrimSequenceName(conf, true)` (or set `hsp.trim.sequence.name` to `true`).
+* **Java 11 and Hadoop 3.3 are required.** Keep using HSP 1.3 for Java 8 or earlier Hadoop versions.
+* **Logging backend:** HSP no longer bundles Log4j2 and only uses the SLF4J API, so the logging configuration is the one of your application or engine.
+* **Invalid configuration values** (a buffer size that is not a positive integer, a flag other than `true` or `false`) now fail with an `IllegalArgumentException` instead of being ignored.
+* **Paired-end properties:** the keys stored by `setLeftInputPath()` and `setRightInputPath()` are now `hsp.paired.*` instead of `hsra.paired.*`. Nothing changes if you only use the static methods.
+* **BZip2 paired-end input** is read in a single split per file (see above).
 
 ### Hadoop examples
 

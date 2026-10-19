@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Next release: 2.0.0.
+## [2.0.0] - 2026-10-19
 
 ### Added
 - A `WARN` message (file and offset of the record) when a FASTQ file ends in the middle of a record. The incomplete record was already dropped, but silently.
 - Unit and integration tests (JUnit 4) for the line reader, the FASTQ/FASTA record readers, the single-end and paired-end input formats and splits (plain, gzip and bzip2 input), including an exhaustive split-boundary sweep and golden files pinning the output format.
 - `coverage` Maven profile (JaCoCo): `mvn test -Pcoverage`.
+- `LineReader` gets the public methods `appendLine()`, `appendTwoLines()`, `skipLine()` and `peek()`, which the readers use to copy lines straight into the record and to skip them without copying.
+- The README documents the configuration properties (`hsp.input.buffer.size`, `hsp.trim.sequence.name`), the logging and the keys of bzip2 splits.
 
 ### Fixed
 - FASTQ reader failing with `IllegalArgumentException: newPosition > limit` on a file whose last line is a lone `@` without a line feed after a header. The incomplete record is now ignored with the usual warning, like any other truncated record.
@@ -32,6 +34,7 @@ Next release: 2.0.0.
 - Paired-end input compressed with a splittable codec (bzip2) failed with `Number of file splits does not match` or `Unexpected different keys`, because the splits of each file are ranges of compressed bytes and the same range of the two files of a pair holds different reads. Each bzip2 file of a pair is now read in a single split (as gzip already was) and a `WARN` explains why and suggests decompressing the files for better performance. Single-end bzip2 input is still split.
 
 ### Changed
+- **Behaviour change:** minimum requirements raised to Java 11 and Hadoop 3.3 (built against Hadoop 3.3.6, which stays a `provided` dependency). Use HSP 1.3 (tag `v1.3`) for Java 8 or earlier Hadoop versions.
 - **Behaviour change:** the read name is no longer cut at its first space by default. The records keep the name exactly as it is in the file (e.g. `@ERR188245.1 HWI-ST... length=75`), and the third line of a FASTQ record is still normalized to `+`. To get the old behaviour (shorter records, less memory) set `hsp.trim.sequence.name` to `true`, or call `es.udc.gac.hadoop.sequence.parser.util.Configuration.setTrimSequenceName(conf, true)`. In HSP 1.3 the default was to trim.
 - **Behaviour change:** invalid values of `hsp.input.buffer.size` and `hsp.trim.sequence.name` are no longer accepted silently. A buffer size that is not a positive integer (before: `0` made the readers return no records without any message and a negative number failed with `NegativeArraySizeException`) and a trim flag other than `true` or `false` (before: ignored, the default was used) now throw an `IllegalArgumentException` that names the property and its value, from the static setters and from `createRecordReader()`. `true` and `false` are still accepted in any case.
 - The properties that `PairedEndSequenceInputFormat.setLeftInputPath()`/`setRightInputPath()` store in the configuration are now named `hsp.paired.*` instead of `hsra.paired.*` (the `hsra` prefix was a mistake). Nothing changes if you use the static methods, as you should; a job that sets the old properties by hand has to rename them. The constants of the class keep their names.
@@ -43,7 +46,8 @@ Next release: 2.0.0.
 - The FASTA reader copies the lines of a sequence straight from the input buffer into the value, instead of through a temporary buffer. The output is identical. Uncompressed FASTA is read about 9-10 % faster, gzip about 2 %; bzip2 does not change.
 - The record readers no longer log anything per record or per line (9 `trace` calls removed from `nextKeyValue()`: 5 in FASTQ and 4 in FASTA, one of them evaluated for every line). Even with the level disabled they built their arguments in the hot path, which cost up to 144 B of allocation per record in FASTQ and 360 B in FASTA (when the JIT does not eliminate it); it is now zero. Each split is described with two `DEBUG` messages (opened, closed) instead of an `INFO` one per split.
 - Error messages of the paired-end classes now name the files and offsets involved (different keys or lengths, one file with more records, different number of splits), and `IOException`s wrapping another exception keep it as their cause.
-- Minimum requirements raised to Java 11 and Hadoop 3.3. Use HSP 1.3 (tag `v1.3`) for Java 8 / earlier Hadoop versions.
 - Build: project version 2.0.0, compiled with `maven.compiler.release` 11 against Hadoop 3.3.6 (`provided`); updated the compiler, Surefire, JaCoCo and build-helper Maven plugins.
 - Paired-end splits now compute their locations when child splits are added, preferring hosts common to both files (falling back to the union) to improve data locality.
-- Java requirement increased from 1.6 to 1.8 (superseded by the Java 11 minimum above).
+
+[Unreleased]: https://github.com/rreye/hsp/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/rreye/hsp/compare/v1.3...v2.0.0
