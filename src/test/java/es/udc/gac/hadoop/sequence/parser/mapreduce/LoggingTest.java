@@ -9,7 +9,10 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.compress.BZip2Codec;
 import org.apache.hadoop.io.compress.GzipCodec;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -178,5 +181,32 @@ public class LoggingTest {
 
 		assertEquals(warnings.toString(), 1, warnings.size());
 		assertTrue(warnings.get(0), warnings.get(0).contains("record starting at offset 12 "));
+	}
+
+	private List<String> warningsOfPairedBzip2Splits(int records) throws Exception {
+		byte[] bytes = TestSupport.compress(BZip2Codec.class, conf, TestSupport.fastq(records, 6, true).getBytes(StandardCharsets.UTF_8));
+		Path left = TestSupport.write(tmp.getRoot(), "left.fq.bz2", bytes);
+		Path right = TestSupport.write(tmp.getRoot(), "right.fq.bz2", bytes);
+		PairedEndSequenceInputFormat.setLeftInputPath(conf, left, FastQInputFormat.class);
+		PairedEndSequenceInputFormat.setRightInputPath(conf, right, FastQInputFormat.class);
+		Job job = Job.getInstance(conf);
+		FileInputFormat.setMaxInputSplitSize(job, 250_000);
+		capture.events.clear();
+		new PairedEndSequenceInputFormat().getSplits(job);
+		return capture.messages(Level.WARN);
+	}
+
+	@Test
+	public void pairedBzip2InputReadInASingleSplitIsReported() throws Exception {
+		List<String> warnings = warningsOfPairedBzip2Splits(30000);
+
+		assertEquals(warnings.toString(), 2, warnings.size());
+		assertTrue(warnings.get(0), warnings.get(0).contains("left.fq.bz2") && warnings.get(0).contains("single split"));
+		assertTrue(warnings.get(1), warnings.get(1).contains("right.fq.bz2") && warnings.get(1).contains("single split"));
+	}
+
+	@Test
+	public void pairedBzip2InputThatFitsInASplitIsNotReported() throws Exception {
+		assertEquals(new ArrayList<String>(), warningsOfPairedBzip2Splits(100));
 	}
 }

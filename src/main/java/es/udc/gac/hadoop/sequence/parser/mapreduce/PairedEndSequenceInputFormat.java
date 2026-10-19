@@ -282,7 +282,24 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 		conf.set(INPUT_DIR, str);
 
 		// Get input splits
-		return inputFormat.getSplits(job);
+		List<InputSplit> splits = inputFormat.getSplits(job);
+
+		// The splits of a splittable compressed file are ranges of compressed bytes, and the same range of the
+		// other file holds different records, so the file has to be read in a single split.
+		if (splits.size() > 1 && new CompressionCodecFactory(conf).getCodec(path) instanceof SplittableCompressionCodec) {
+			long length = 0;
+			for (InputSplit split : splits)
+				length += ((FileSplit) split).getLength();
+			logger.warn("{} is compressed with a splittable codec (e.g. bzip2): the two files of a pair compress to "
+					+ "different sizes, so splits of compressed bytes would not hold the same reads on both sides. "
+					+ "It will be read in a single split instead of {} splits. For better performance, decompress "
+					+ "the files first: uncompressed input is split and read in parallel", path, splits.size());
+			String[] hosts = ((FileSplit) splits.get(0)).getLocations();
+			splits = new ArrayList<InputSplit>(1);
+			splits.add(new FileSplit(path, 0, length, hosts));
+		}
+
+		return splits;
 	}
 
 	/**

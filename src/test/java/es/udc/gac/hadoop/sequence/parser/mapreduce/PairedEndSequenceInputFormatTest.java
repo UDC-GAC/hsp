@@ -22,7 +22,6 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.VersionInfo;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -411,12 +410,12 @@ public class PairedEndSequenceInputFormatTest {
 	}
 
 	/**
-	 * The splits of each file are computed independently in compressed bytes. Both files compress to
-	 * different sizes, so the i-th split of each one does not contain the same records.
+	 * The splits of a splittable compressed file are computed in compressed bytes. Both files compress to
+	 * different sizes, so the i-th split of each one would not contain the same records: each file is read
+	 * in a single split instead, whatever the split size.
 	 */
-	@Ignore("BUG: splits of a splittable compressed input (bzip2) are computed per file in compressed bytes, so both files get a different number of splits or splits with different records")
 	@Test
-	public void bzip2PairsAreReadInSeveralSplits() throws Exception {
+	public void bzip2PairsAreNeverSplit() throws Exception {
 		String leftText = TestSupport.fastq(30000, 6, true);
 		String rightText = lowEntropyMateOfFastq(leftText);
 		Path left = TestSupport.write(tmp.getRoot(), "l.fq.bz2", TestSupport.compress(BZip2Codec.class, conf, leftText.getBytes(StandardCharsets.UTF_8)));
@@ -426,7 +425,11 @@ public class PairedEndSequenceInputFormatTest {
 
 		Job job = Job.getInstance(conf);
 		FileInputFormat.setMaxInputSplitSize(job, 250_000);
-		assertTrue(new PairedEndSequenceInputFormat().getSplits(job).size() > 1);
+		List<InputSplit> splits = new PairedEndSequenceInputFormat().getSplits(job);
+		assertEquals(1, splits.size());
+		FileSplit leftSplit = ((PairedEndInputSplit) splits.get(0)).get(0);
+		assertEquals(0, leftSplit.getStart());
+		assertEquals(left.getFileSystem(conf).getFileStatus(left).getLen(), leftSplit.getLength());
 
 		List<PairRecord> actual = TestSupport.readAllPairedSplits(conf, 250_000);
 		assertEquals(leftValues(expected), leftValues(actual));
