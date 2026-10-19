@@ -139,6 +139,24 @@ public class PairedEndSequenceInputFormatTest {
 	}
 
 	@Test
+	public void inputKeysUseTheHspPrefix() throws Exception {
+		Path left = TestSupport.write(tmp.getRoot(), "l.fq", "@a\nA\n+\nI\n");
+		Path right = TestSupport.write(tmp.getRoot(), "r.fq", "@a\nT\n+\nI\n");
+
+		configure(left, right, FastQInputFormat.class);
+
+		assertEquals("hsp.paired.left.path", PairedEndSequenceInputFormat.LEFT_INPUT_PATH);
+		assertEquals("hsp.paired.right.path", PairedEndSequenceInputFormat.RIGHT_INPUT_PATH);
+		assertEquals("hsp.paired.left.inputformat", PairedEndSequenceInputFormat.LEFT_INPUT_FORMAT);
+		assertEquals("hsp.paired.right.inputformat", PairedEndSequenceInputFormat.RIGHT_INPUT_FORMAT);
+		assertEquals(FastQInputFormat.class.getName(), conf.get("hsp.paired.left.inputformat"));
+		assertEquals(FastQInputFormat.class.getName(), conf.get("hsp.paired.right.inputformat"));
+		assertTrue(conf.get("hsp.paired.left.path").endsWith("l.fq"));
+		assertTrue(conf.get("hsp.paired.right.path").endsWith("r.fq"));
+		assertEquals(null, conf.get("hsra.paired.left.path"));
+	}
+
+	@Test
 	public void jobOverloadsStoreTheSameAsConfigurationOverloads() throws Exception {
 		Path left = TestSupport.write(tmp.getRoot(), "l.fa", ">a\nA\n");
 		Path right = TestSupport.write(tmp.getRoot(), "r.fa", ">a\nT\n");

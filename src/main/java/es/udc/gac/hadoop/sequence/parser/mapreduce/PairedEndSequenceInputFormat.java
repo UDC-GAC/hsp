@@ -54,10 +54,10 @@ public class PairedEndSequenceInputFormat extends FileInputFormat<LongWritable, 
 	private static final Logger logger = LoggerFactory.getLogger(PairedEndSequenceInputFormat.class);
 	private static final double SPLIT_SLOP = 1.1; // 10% slop
 
-	public static final String LEFT_INPUT_PATH = "hsra.paired.left.path";
-	public static final String RIGHT_INPUT_PATH = "hsra.paired.right.path";
-	public static final String LEFT_INPUT_FORMAT = "hsra.paired.left.inputformat";
-	public static final String RIGHT_INPUT_FORMAT = "hsra.paired.right.inputformat";
+	public static final String LEFT_INPUT_PATH = "hsp.paired.left.path";
+	public static final String RIGHT_INPUT_PATH = "hsp.paired.right.path";
+	public static final String LEFT_INPUT_FORMAT = "hsp.paired.left.inputformat";
+	public static final String RIGHT_INPUT_FORMAT = "hsp.paired.right.inputformat";
 
 	@Override
 	protected boolean isSplitable(JobContext context, Path file) {
