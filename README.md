@@ -54,6 +54,8 @@ HSP is configured through the Hadoop configuration of the job (`Configuration` i
 | `hsp.input.buffer.size` | 65536 | `setInputBufferSize(conf, bytes)` | Size in bytes of the input buffer of the readers (also the initial size of the `Text` that holds each record) |
 | `hsp.trim.sequence.name` | `false` | `setTrimSequenceName(conf, true)` | Cut the read name at its first space, dropping the description that follows it (e.g. `@ERR188245.1 length=75` becomes `@ERR188245.1`). By default the name is kept as it is in the file. Enabling it makes the records shorter, which saves memory |
 
+An invalid value (a buffer size that is not a positive integer, a flag other than `true` or `false`) makes the reader fail with an `IllegalArgumentException` that names the property.
+
 Until HSP 1.3 the names were trimmed by default.
 
 ### Logging
